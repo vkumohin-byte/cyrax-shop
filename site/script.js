@@ -1,4 +1,7 @@
-const API_BASE = window.location.origin.includes('localhost') ? 'http://localhost:5500/api' : '/api';
+// Замените этот URL на ваш актуальный URL бэкенда (например, от Render)
+const API_BASE = window.location.origin.includes('localhost') 
+  ? 'http://localhost:5500/api' 
+  : 'https://shadows-apps-sites-while.trycloudflare.com/api';
 
 const PERIOD_NAMES = {
   '1d': '1 день',
