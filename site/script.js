@@ -46,7 +46,20 @@ async function loadPrices() {
     keysGrid.innerHTML = '';
     servicesGrid.innerHTML = '';
     
-    for (const [key, currencyPrices] of Object.entries(prices)) {
+    // Сортировка продуктов, чтобы они шли по порядку
+    const sortedKeys = Object.keys(prices).sort((a, b) => {
+      const order = ['1d', '3d', '7d', '30d'];
+      const aIndex = order.indexOf(a);
+      const bIndex = order.indexOf(b);
+      // Неизвестные ключи кидаем в конец
+      if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
+    
+    for (const key of sortedKeys) {
+      const currencyPrices = prices[key];
       const isKey = key.endsWith('d');
       const name = PERIOD_NAMES[key] || key;
       
