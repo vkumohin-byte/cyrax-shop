@@ -1,13 +1,9 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://cyrax-bot-0vwr.onrender.com/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/site/$1"
     }
-  ],
-  "cleanUrls": true
+  ]
 }
