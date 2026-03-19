@@ -104,14 +104,7 @@ let checkoutState = {
   telegramId: null
 };
 
-window.onTelegramAuth = function(user) {
-  window.authorizedTgId = user.id;
-  document.getElementById('telegram-login-container').classList.add('hidden');
-  const successDiv = document.getElementById('auth-success');
-  successDiv.classList.remove('hidden');
-  document.getElementById('auth-id-display').innerText = user.first_name + (user.username ? ` (@${user.username})` : '');
-  document.getElementById('error-message').classList.add('hidden');
-};
+// window.onTelegramAuth is defined in checkout.html for earlier loading
 
 async function setupCheckout() {
   const product = sessionStorage.getItem('selectedProduct');
