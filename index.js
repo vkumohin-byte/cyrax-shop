@@ -20404,6 +20404,71 @@ _Use your balance for instant key purchases._ 🔑`,
 });
 
 // ==========================================
+// 🚀 ИНТЕГРАЦИЯ: WEB SITE API (CYRAX-SHOP)
+// ==========================================
+const cors = require('cors');
+app.use(cors());
+app.use(express.json());
+
+// Разрешаем раздавать статику сайта, если папка site существует (для localhost)
+app.use('/site', express.static(path.join(__dirname, 'site')));
+
+app.get('/api/prices', (req, res) => res.json(PRICES));
+
+const PAYMENT_METHODS_PER_CURRENCY = {
+  RUB: ['sbp', 'cryptobot'],
+  USD: ['paypal', 'binance', 'cryptobot'],
+  EUR: ['card_it', 'binance', 'cryptobot', 'paypal'],
+  UAH: ['card_ua', 'cryptobot']
+};
+
+app.get('/api/payment-methods', (req, res) => {
+  const currency = req.query.currency;
+  res.json(currency && PAYMENT_METHODS_PER_CURRENCY[currency] ? PAYMENT_METHODS_PER_CURRENCY[currency] : PAYMENT_METHODS_PER_CURRENCY);
+});
+
+app.get('/api/payment-details/:method', (req, res) => {
+  const method = req.params.method;
+  res.json({ details: PAYMENT_DETAILS[method] || '' });
+});
+
+app.get('/api/order-status/:orderId', (req, res) => {
+  const orderId = parseInt(req.params.orderId);
+  db.get(`SELECT status FROM orders WHERE id = ?`, [orderId], (err, order) => {
+    if (err || !order) return res.status(404).json({ error: 'Order not found' });
+    res.json({ status: order.status });
+  });
+});
+
+app.post('/api/site/create-order', (req, res) => {
+  const { telegram_id, product, currency, method } = req.body;
+  if (!telegram_id || !product || !currency || !method) return res.status(400).json({ error: 'Missing params' });
+  const price = PRICES[product]?.[currency];
+  if (!price) return res.status(400).json({ error: 'Invalid product or currency' });
+
+  db.run(
+    `INSERT INTO orders (user_id, product, amount, currency, payment_method, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+    [parseInt(telegram_id), product, price, currency, method],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'DB Error' });
+      const orderId = this.lastID;
+      
+      const userMsg = `✅ *Заказ #${orderId} создан!*\n\n🔑 Товар: ${product}\n💰 Сумма: ${price} ${currency}\n💳 Метод: ${method}\n\n⚠️ После оплаты отправьте скриншот чека в этот чат (если оплата ручная) или ожидайте проверки.`;
+      bot.sendMessage(telegram_id, userMsg, {
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: [[{ text: '❌ Отменить заказ', callback_data: `cancel_order_${orderId}` }]] }
+      }).catch(e => console.error('Site order notify error:', e.message));
+
+      if (ADMIN_ID) {
+        bot.sendMessage(ADMIN_ID, `🛒 *Новый заказ с САЙТА!*\n\n👤 ID: ${telegram_id}\n🔑 ${product}\n💰 ${price} ${currency}\n💳 ${method}\n📦 Заказ #${orderId}`).catch(()=>{});
+      }
+
+      res.json({ success: true, orderId });
+    }
+  );
+});
+
+// ==========================================
 // 🚀 ЗАПУСК СЕРВЕРА
 // ==========================================
 app.listen(PORT, async () => {
