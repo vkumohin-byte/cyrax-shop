@@ -1,27 +1,73 @@
-// Замените этот URL на ваш актуальный URL бэкенда (например, от Render)
+// --- Константы и Настройки ---
 const API_BASE = window.location.origin.includes('localhost') 
   ? 'http://localhost:5500/api' 
   : 'https://cyrax-bot-0vwr.onrender.com/api';
 
-const PERIOD_NAMES = {
-  '1d': '1 день',
-  '3d': '3 дня',
-  '7d': '7 дней',
-  '30d': '30 дней',
-  'infinite_boost': 'Метод Бесконечного Буста',
-  'reseller_connection': 'Партнёрская программа'
-};
-
 const METHOD_NAMES = {
-  'sbp': 'СБП',
-  'card_ua': 'Карта UA',
-  'card_it': 'Карта IT',
-  'paypal': 'PayPal',
-  'binance': 'Binance P2P',
-  'cryptobot': 'CryptoBot'
+  'cryptobot': 'CryptoBot ₿',
+  'sbp': 'СБП — Россия 🇷🇺',
+  'card_ua': 'Карта UA 🇺🇦',
+  'card_it': 'Карта IT 🇮🇹',
+  'binance': 'Binance P2P 💎',
+  'paypal': 'PayPal 💰',
+  'crypto': 'CryptoBot ₿'
 };
 
-// Utilities
+const PERIOD_NAMES = {
+  '1d': 'Ключ на 1 день 🔑',
+  '3d': 'Ключ на 3 дня 🔑',
+  '7d': 'Ключ на 7 дней 🔑',
+  '30d': 'Ключ на 30 дней 🔑',
+  'infinite_boost': 'Буст Метод 🚀',
+  'reseller_connection': 'Партнёрство 🤝'
+};
+
+// --- Глобальная защита и статус системы ---
+async function checkSystemStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/status`);
+    const status = await res.json();
+    
+    if (status.maintenanceMode && !window.isAdmin) {
+      showMaintenance(status.maintenanceReason);
+    }
+    return status;
+  } catch (e) { 
+    console.error('Ошибка проверки статуса', e);
+    return { maintenanceMode: false };
+  }
+}
+
+function guardAuth() {
+  const user = JSON.parse(sessionStorage.getItem('tgUser'));
+  const isLanding = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
+  
+  if (!user && !isLanding) {
+    window.location.href = 'index.html';
+    return null;
+  }
+  
+  if (user) {
+    window.authorizedTgId = user.id;
+    // Админ-проверка (ID админа из промпта)
+    window.isAdmin = (user.id === 5187702657); 
+  }
+  return user;
+}
+
+function showMaintenance(reason) {
+  document.body.innerHTML = `
+    <div style="height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px; background:#0A0C10; color:white;">
+      <div class="glass-card" style="max-width:500px; border-radius:24px;">
+        <h1 style="color:var(--accent-purple); margin-bottom:20px;">🚧 ТЕХОБСЛУЖИВАНИЕ</h1>
+        <p style="font-size:1.2rem; margin-bottom:30px; color:var(--text-secondary);">${reason}</p>
+        <div style="font-size:3rem; filter: drop-shadow(0 0 10px var(--accent-purple));">⏳</div>
+      </div>
+    </div>
+  `;
+}
+
+// --- Утилиты ---
 function formatPrice(amount, currency) {
   if (currency === 'RUB') return amount + ' ₽';
   if (currency === 'UAH') return amount + ' ₴';
@@ -30,11 +76,7 @@ function formatPrice(amount, currency) {
   return amount + ' ' + currency;
 }
 
-// Shop Page Logic
-if (window.location.pathname.endsWith('shop.html')) {
-  document.addEventListener('DOMContentLoaded', loadPrices);
-}
-
+// --- Логика магазина (shop.html) ---
 async function loadPrices() {
   try {
     const res = await fetch(`${API_BASE}/prices`);
@@ -42,16 +84,15 @@ async function loadPrices() {
     
     const keysGrid = document.getElementById('keys-grid');
     const servicesGrid = document.getElementById('services-grid');
-    
+    if (!keysGrid || !servicesGrid) return;
+
     keysGrid.innerHTML = '';
     servicesGrid.innerHTML = '';
     
-    // Сортировка продуктов, чтобы они шли по порядку
     const sortedKeys = Object.keys(prices).sort((a, b) => {
       const order = ['1d', '3d', '7d', '30d'];
       const aIndex = order.indexOf(a);
       const bIndex = order.indexOf(b);
-      // Неизвестные ключи кидаем в конец
       if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
       if (aIndex === -1) return 1;
       if (bIndex === -1) return -1;
@@ -60,30 +101,24 @@ async function loadPrices() {
     
     for (const key of sortedKeys) {
       const currencyPrices = prices[key];
-      const isKey = key.endsWith('d');
       const name = PERIOD_NAMES[key] || key;
+      const isKey = key.endsWith('d');
       
       const card = document.createElement('div');
       card.className = 'product-card glass-card';
-      
       const displayPrice = currencyPrices['RUB'] ? formatPrice(currencyPrices['RUB'], 'RUB') : formatPrice(currencyPrices['USD'] || 0, 'USD');
-      
       const icon = isKey ? '🔑' : '⚡';
+      
       card.innerHTML = `
         <div class="product-title">${icon} ${name}</div>
-        <div class="product-price">${displayPrice} <span style="font-size: 1rem; color: var(--text-secondary);">(RUB)</span></div>
-        <button class="btn" style="width: 100%; border-radius: 8px;" onclick="buyProduct('${key}')">Купить</button>
+        <div class="product-price">${displayPrice} <span style="font-size: 0.9rem; color: var(--text-secondary);">(RUB)</span></div>
+        <button class="btn" style="width: 100%; border-radius: 10px;" onclick="buyProduct('${key}')">Купить</button>
       `;
-      
-      if (isKey) {
-        keysGrid.appendChild(card);
-      } else {
-        servicesGrid.appendChild(card);
-      }
+      if (isKey) keysGrid.appendChild(card);
+      else servicesGrid.appendChild(card);
     }
   } catch (e) {
-    console.error('Failed to load prices', e);
-    document.getElementById('keys-grid').innerHTML = '<p style="color:red">Ошибка загрузки цен</p>';
+    console.error('Загрузка цен провалена', e);
   }
 }
 
@@ -92,163 +127,248 @@ window.buyProduct = function(productKey) {
   window.location.href = 'checkout.html';
 };
 
-// Checkout Page Logic
-if (window.location.pathname.endsWith('checkout.html')) {
-  document.addEventListener('DOMContentLoaded', setupCheckout);
-}
-
-let checkoutState = {
-  product: null,
-  currency: null,
-  method: null,
-  telegramId: null
-};
-
-// window.onTelegramAuth is defined in checkout.html for earlier loading
+// --- Логика оформления (checkout.html) ---
+let checkoutState = { product: null, currency: null, method: null };
 
 async function setupCheckout() {
-  const product = sessionStorage.getItem('selectedProduct');
-  if (!product) {
-    window.location.href = 'shop.html';
-    return;
+  const urlParams = new URLSearchParams(window.location.search);
+  const isTopup = urlParams.get('type') === 'topup';
+  let product = sessionStorage.getItem('selectedProduct');
+
+  if (isTopup) {
+      product = 'topup_balance';
+      const amount = sessionStorage.getItem('topupAmount');
+      document.getElementById('selected-product-info').innerText = `💳 Пополнение баланса: ${amount} RUB`;
+      checkoutState.product = 'topup_balance';
+      checkoutState.currency = 'RUB';
+      const rubBtn = document.querySelector('[data-currency="RUB"]');
+      if (rubBtn) { rubBtn.click(); rubBtn.style.pointerEvents = 'none'; }
+  } else {
+      if (!product) { window.location.href = 'shop.html'; return; }
+      document.getElementById('selected-product-info').innerText = `🛍️ Товар: ${PERIOD_NAMES[product] || product}`;
+      checkoutState.product = product;
+      checkoutState.currency = 'USD'; // По умолчанию
   }
-  
-  checkoutState.product = product;
-  document.getElementById('selected-product-info').innerText = `Товар: ${PERIOD_NAMES[product] || product}`;
-  
-  // Setup Currency Selection
+
   document.querySelectorAll('.currency-selector .selector-btn').forEach(btn => {
     btn.addEventListener('click', (e) => selectCurrency(e.target.dataset.currency));
   });
-  
   document.getElementById('pay-btn').addEventListener('click', createOrder);
 }
 
 async function selectCurrency(currency) {
   checkoutState.currency = currency;
   checkoutState.method = null;
-  
-  // UI update
   document.querySelectorAll('.currency-selector .selector-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.currency-selector .selector-btn[data-currency="${currency}"]`).classList.add('active');
+  const target = document.querySelector(`.currency-selector .selector-btn[data-currency="${currency}"]`);
+  if (target) target.classList.add('active');
   
-  document.getElementById('details-group').classList.add('hidden');
-  document.getElementById('submit-group').classList.add('hidden');
-  
-  // Show methods
-  const methodGroup = document.getElementById('method-group');
   const methodSelector = document.getElementById('method-selector');
-  methodSelector.innerHTML = '<div class="loader" style="display:inline-block"></div> Загрузка...';
-  methodGroup.classList.remove('hidden');
+  document.getElementById('method-group').classList.remove('hidden');
+  methodSelector.innerHTML = '<div class="loader"></div>';
   
   try {
     const res = await fetch(`${API_BASE}/payment-methods?currency=${currency}`);
     const methods = await res.json();
-    
     methodSelector.innerHTML = '';
     methods.forEach(method => {
       const btn = document.createElement('div');
       btn.className = 'selector-btn';
       btn.innerText = METHOD_NAMES[method] || method;
-      btn.dataset.method = method;
-      btn.addEventListener('click', () => selectMethod(method, btn));
+      btn.onclick = () => selectMethod(method, btn);
       methodSelector.appendChild(btn);
     });
-  } catch (e) {
-    methodSelector.innerHTML = '<p style="color:red">Ошибка загрузки методов</p>';
-  }
+  } catch (e) { methodSelector.innerHTML = 'Ошибка загрузки'; }
 }
 
-async function selectMethod(method, btnElement) {
+async function selectMethod(method, btn) {
   checkoutState.method = method;
-  
-  // UI update
   document.querySelectorAll('.method-selector .selector-btn').forEach(b => b.classList.remove('active'));
-  btnElement.classList.add('active');
+  btn.classList.add('active');
   
-  const detailsGroup = document.getElementById('details-group');
   const paymentDetails = document.getElementById('payment-details');
-  paymentDetails.innerHTML = '<div class="loader" style="display:inline-block"></div> Загрузка...';
-  detailsGroup.classList.remove('hidden');
-  document.getElementById('submit-group').classList.add('hidden');
-  
+  document.getElementById('details-group').classList.remove('hidden');
+  paymentDetails.innerHTML = '<div class="loader"></div>';
+
   try {
     const res = await fetch(`${API_BASE}/payment-details/${method}`);
     const data = await res.json();
-    
-    let instructions = '';
+    let inst = '';
     if (method === 'cryptobot' || method === 'crypto') {
-      instructions = '<p>🤖 <b>Оплата через CryptoBot</b></p><p>Инвойс будет создан и отправлен вам в Telegram после нажатия "Я оплатил".</p>';
+      inst = '<p>🤖 Инвойс будет отправлен вам в Telegram после нажатия ниже.</p>';
     } else {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      if (urlRegex.test(data.details)) {
-        const htmlDetails = data.details.replace(urlRegex, '<a href="$1" target="_blank" class="btn" style="display:block; margin: 15px 0; text-align:center;">🔗 Оплатить по ссылке</a>');
-        instructions = `
-          <p>Реквизиты для оплаты (${METHOD_NAMES[method]}):</p>
-          <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius:8px; margin: 10px 0; word-wrap: break-word;">${htmlDetails}</div>
-          <p>⚠️ Переведите точную сумму и <b>обязательно сохраните чек</b>. После оплаты нажмите кнопку ниже.</p>
-        `;
-      } else {
-        instructions = `
-          <p>Реквизиты для оплаты (${METHOD_NAMES[method]}):</p>
-          <pre>${data.details}</pre>
-          <p>⚠️ Переведите точную сумму и <b>обязательно сохраните чек</b>. После оплаты нажмите кнопку ниже.</p>
-        `;
-      }
+      const htmlDetails = data.details.replace(urlRegex, '<a href="$1" target="_blank" class="btn" style="display:block; margin: 15px 0; text-align:center;">🔗 Открыть страницу оплаты</a>');
+      inst = `<div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius:12px; margin: 10px 0;">${htmlDetails}</div>`;
     }
-    
-    paymentDetails.innerHTML = instructions;
+    paymentDetails.innerHTML = inst;
     document.getElementById('submit-group').classList.remove('hidden');
-  } catch (e) {
-    paymentDetails.innerHTML = '<p style="color:red">Ошибка загрузки реквизитов</p>';
-  }
+  } catch (e) { paymentDetails.innerHTML = 'Ошибка'; }
 }
 
 async function createOrder() {
-  const errorMsg = document.getElementById('error-message');
+  const user = JSON.parse(sessionStorage.getItem('tgUser'));
+  if (!user) return alert('Требуется авторизация!');
   
-  if (!window.authorizedTgId) {
-    errorMsg.innerText = 'Пожалуйста, авторизуйтесь через Telegram в Шаге 1';
-    errorMsg.classList.remove('hidden');
-    return;
-  }
-  
-  if (!checkoutState.method) {
-    errorMsg.innerText = 'Выберите метод оплаты';
-    errorMsg.classList.remove('hidden');
-    return;
-  }
-  
+  const isTopup = checkoutState.product === 'topup_balance';
+  const endpoint = isTopup ? '/site/topup-request' : '/site/create-order';
+  const body = isTopup ? { telegram_id: user.id, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method }
+                        : { telegram_id: user.id, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method };
+
   const payBtn = document.getElementById('pay-btn');
   payBtn.disabled = true;
-  payBtn.classList.add('loading');
-  errorMsg.classList.add('hidden');
-  
+  payBtn.innerText = '⌛ Создание...';
+
   try {
-    const res = await fetch(`${API_BASE}/site/create-order`, {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        telegram_id: window.authorizedTgId,
-        product: checkoutState.product,
-        currency: checkoutState.currency,
-        method: checkoutState.method
-      })
+      body: JSON.stringify(body)
     });
-    
     const data = await res.json();
-    
-    if (res.ok && data.success) {
-      window.location.href = `success.html?order=${data.orderId}`;
-    } else {
-      errorMsg.innerText = data.error || 'Ошибка при создании заказа';
-      errorMsg.classList.remove('hidden');
+    if (data.success) {
+      window.location.href = `success.html?order=${data.orderId}${isTopup ? '&type=topup' : ''}`;
+    } else alert(data.error || 'Ошибка');
+  } catch (e) { alert('Сервер недоступен'); }
+  finally { payBtn.disabled = false; payBtn.innerText = 'Я оплатил'; }
+}
+
+// --- Виджет поддержки ---
+function initSupportWidget() {
+  const user = JSON.parse(sessionStorage.getItem('tgUser'));
+  if (!user || document.getElementById('support-bubble')) return;
+
+  const html = `
+    <div class="support-bubble" onclick="toggleSupport()">💬</div>
+    <div class="support-modal glass-card" id="support-modal">
+      <div class="support-header"><span>👨‍💻 ТЕХПОДДЕРЖКА</span><span onclick="toggleSupport()" style="cursor:pointer">✖</span></div>
+      <div class="support-body">
+        <textarea class="support-input" id="support-text" placeholder="Опишите ваш вопрос..."></textarea>
+        <button class="btn" style="width:100%" onclick="sendSupportMessage()">ОТПРАВИТЬ</button>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+window.toggleSupport = () => {
+  const m = document.getElementById('support-modal');
+  if (m) m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+};
+
+window.sendSupportMessage = async () => {
+  const text = document.getElementById('support-text').value;
+  const user = JSON.parse(sessionStorage.getItem('tgUser'));
+  if (!text || text.length < 5) return alert('Сообщение слишком короткое');
+  
+  try {
+    const res = await fetch(`${API_BASE}/site/support-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegram_id: user.id, username: user.username || user.first_name, message: text })
+    });
+    if (res.ok) { 
+      alert('Ваше сообщение отправлено администратору!'); 
+      document.getElementById('support-text').value = '';
+      toggleSupport(); 
     }
-  } catch (e) {
-    errorMsg.innerText = 'Сетевая ошибка';
-    errorMsg.classList.remove('hidden');
-  } finally {
-    payBtn.classList.remove('loading');
-    payBtn.disabled = false;
+  } catch (e) { alert('Ошибка отправки'); }
+};
+
+// --- Админ-панель (упрощенная) ---
+async function checkAdminStatus() {
+  const user = JSON.parse(sessionStorage.getItem('tgUser'));
+  if (!user || !window.isAdmin || document.getElementById('admin-dash-btn')) return;
+  const header = document.querySelector('header');
+  if (header) {
+    const btn = document.createElement('button');
+    btn.id = 'admin-dash-btn'; btn.className = 'admin-dash-btn'; btn.innerText = '⚙️ АДМИН';
+    btn.onclick = openAdminPanel;
+    header.appendChild(btn);
   }
 }
+
+async function openAdminPanel() {
+  const html = `
+    <div class="modal-overlay" onclick="closeAdminPanel()"></div>
+    <div id="admin-panel-modal" class="glass-card" style="display:flex; flex-direction:column; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:800px; height:80vh; z-index:2000;">
+      <div class="support-header" style="background:var(--accent-purple);"><span>🔐 ЗАКАЗЫ САЙТА</span><span onclick="closeAdminPanel()" style="cursor:pointer">✖</span></div>
+      <div style="padding:20px; overflow-y:auto; flex:1;">
+        <table class="admin-table" style="width:100%; border-collapse:collapse;">
+          <thead style="text-align:left; color:var(--text-secondary);"><tr><th>ID</th><th>Клиент</th><th>Товар</th><th>Сумма</th><th>Действие</th></tr></thead>
+          <tbody id="admin-orders-body"></tbody></table></div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  loadAdminOrders();
+}
+
+window.closeAdminPanel = () => {
+  document.querySelector('.modal-overlay')?.remove();
+  document.getElementById('admin-panel-modal')?.remove();
+};
+
+async function loadAdminOrders() {
+  const u = JSON.parse(sessionStorage.getItem('tgUser'));
+  try {
+    const res = await fetch(`${API_BASE}/admin/orders?admin_id=${u.id}`);
+    const orders = await res.json();
+    document.getElementById('admin-orders-body').innerHTML = orders.map(o => `
+      <tr style="border-bottom:1px solid var(--glass-border); height:50px;">
+        <td>#${o.id}</td><td>@${o.username || o.user_id}</td><td>${o.product}</td><td>${o.amount} ${o.currency}</td>
+        <td><button class="btn" style="padding:5px 10px; font-size:0.8rem;" onclick="approveOrder(${o.id})">ОДОБРИТЬ</button></td>
+      </tr>`).join('');
+  } catch (e) { }
+}
+
+window.approveOrder = async (id) => {
+  const u = JSON.parse(sessionStorage.getItem('tgUser'));
+  if (!confirm(`Одобрить заказ #${id}?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/admin/approve-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_id: u.id, order_id: id })
+    });
+    if (res.ok) { alert('Заказ успешно одобрен!'); loadAdminOrders(); }
+  } catch (e) { }
+};
+
+// --- Баланс Пользователя ---
+async function loadUserBalance() {
+  const user = JSON.parse(sessionStorage.getItem('tgUser'));
+  if (!user) return;
+  try {
+    const res = await fetch(`${API_BASE}/site/user-profile?telegram_id=${user.id}`);
+    const data = await res.json();
+    
+    // Обновляем шапку (если есть)
+    const headerProfile = document.getElementById('user-profile-header');
+    if (headerProfile) {
+        headerProfile.classList.remove('hidden');
+        document.getElementById('header-user-name').innerText = `@${data.username || user.username || user.first_name}`;
+        document.getElementById('header-balance').innerText = `${data.balance} ₽`;
+    }
+
+    // Обновляем профиль на странице оплаты
+    const prof = document.getElementById('user-profile-section');
+    if (prof) {
+        prof.classList.remove('hidden');
+        document.getElementById('user-balance-display').innerText = `${data.balance} ₽`;
+        document.getElementById('auth-id-display').innerText = `@${data.username || user.username || user.first_name}`;
+    }
+  } catch (e) { }
+}
+
+// --- Инициализация ---
+document.addEventListener('DOMContentLoaded', async () => {
+    const user = guardAuth();
+    await checkSystemStatus();
+
+    if (user) {
+        initSupportWidget();
+        checkAdminStatus();
+        loadUserBalance();
+    }
+
+    if (window.location.pathname.includes('checkout.html')) setupCheckout();
+    if (window.location.pathname.endsWith('shop.html')) loadPrices();
+});

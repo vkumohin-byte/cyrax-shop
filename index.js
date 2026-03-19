@@ -17962,11 +17962,8 @@ async function sendRenewalReminders() {
         userId: r.order.user_id,
         product: r.order.product,
         confirmedAt: r.order.confirmed_at,
-        periodName: r.periodName,
-        uname: r.uname,
-        confirmedDate: r.confirmedDate,
-        userLang: r.order.user_lang || 'ru'
       }));
+
       adminSession.reminderBatch.__key = batchKey;
 
       const summaryLines = rows.map((r, i) =>
@@ -20410,6 +20407,59 @@ const cors = require('cors');
 app.use(cors());
 app.use(express.json());
 
+// --- System Status & Maintenance ---
+let SYSTEM_STATUS = {
+  maintenanceMode: false,
+  maintenanceReason: '🛠 Плановое техническое обслуживание. Скоро вернемся!',
+  keysDisabled: false,
+  boostDisabled: false
+};
+
+app.get('/api/status', (req, res) => res.json(SYSTEM_STATUS));
+
+app.post('/api/admin/set-status', (req, res) => {
+  const { admin_id, property, value } = req.body;
+  if (parseInt(admin_id) !== parseInt(ADMIN_ID)) return res.status(403).json({ error: 'Forbidden' });
+  if (SYSTEM_STATUS.hasOwnProperty(property)) {
+    SYSTEM_STATUS[property] = value;
+    res.json({ success: true, status: SYSTEM_STATUS });
+  } else {
+    res.status(400).json({ error: 'Invalid property' });
+  }
+});
+
+app.get('/api/site/user-profile', (req, res) => {
+  const telegram_id = parseInt(req.query.telegram_id);
+  if (!telegram_id) return res.status(400).json({ error: 'Missing ID' });
+
+  db.get(`SELECT balance, username FROM users WHERE id = ?`, [telegram_id], (err, row) => {
+    if (err) return res.status(500).json({ error: 'DB Error' });
+    if (!row) {
+      return res.json({ balance: 0, username: 'Anonymous' });
+    }
+    res.json({ balance: row.balance || 0, username: row.username });
+  });
+});
+
+app.post('/api/site/topup-request', (req, res) => {
+  const { telegram_id, amount, method } = req.body;
+  if (!telegram_id || !amount || !method) return res.status(400).json({ error: 'Missing params' });
+
+  db.run(
+    `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at) VALUES (?, 'topup_balance', ?, 'RUB', ?, 'pending', datetime('now'))`,
+    [parseInt(telegram_id), amount, method],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'DB Error' });
+      const orderId = this.lastID;
+      
+      const adminMsg = `💰 **ЗАПРОС НА ПОПОЛНЕНИЕ БАЛАНСА**\n\n👤 ID: ${telegram_id}\n💵 Сумма: ${amount} RUB\n💳 Метод: ${method}\n📦 Заказ #${orderId}`;
+      if (ADMIN_ID) bot.sendMessage(ADMIN_ID, adminMsg).catch(()=>{});
+      
+      res.json({ success: true, orderId });
+    }
+  );
+});
+
 // Разрешаем раздавать статику сайта, если папка site существует (для localhost)
 app.use('/site', express.static(path.join(__dirname, 'site')));
 
@@ -20442,6 +20492,15 @@ app.get('/api/order-status/:orderId', (req, res) => {
 
 app.post('/api/site/create-order', (req, res) => {
   const { telegram_id, product, currency, method } = req.body;
+  
+  if (SYSTEM_STATUS.maintenanceMode && parseInt(telegram_id) !== parseInt(ADMIN_ID)) {
+    return res.status(503).json({ error: 'Сайт находится на техническом обслуживании' });
+  }
+
+  if (SYSTEM_STATUS.keysDisabled && product.endsWith('d')) {
+    return res.status(403).json({ error: 'Продажа ключей временно приостановлена' });
+  }
+
   if (!telegram_id || !product || !currency || !method) return res.status(400).json({ error: 'Missing params' });
   const price = PRICES[product]?.[currency];
   if (!price) return res.status(400).json({ error: 'Invalid product or currency' });
@@ -20467,6 +20526,62 @@ app.post('/api/site/create-order', (req, res) => {
     }
   );
 });
+
+// --- Support Message (Site -> Admin Telegram) ---
+app.post('/api/site/support-message', (req, res) => {
+  const { telegram_id, message, username } = req.body;
+  if (!telegram_id || !message) return res.status(400).json({ error: 'Missing params' });
+
+  const adminMsg = `🆘 **ПОДДЕРЖКА С САЙТА**\n\n👤 От: [${username || 'Без ника'}](tg://user?id=${telegram_id})\n🆔 ID: ${telegram_id}\n💬 Сообщение: ${message}`;
+  
+  bot.sendMessage(ADMIN_ID, adminMsg, { 
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [[{ text: '✍️ Ответить', callback_data: `msg_buyer_${telegram_id}` }]]
+    }
+  }).catch(e => console.error('Support forward error:', e.message));
+
+  res.json({ success: true });
+});
+
+// --- Admin Endpoints (Restricted to ADMIN_ID) ---
+app.get('/api/admin/orders', (req, res) => {
+  const adminId = parseInt(req.query.admin_id);
+  if (adminId !== ADMIN_ID) return res.status(403).json({ error: 'Unauthorized' });
+
+  db.all(`SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.status = 'pending' ORDER BY o.id DESC`, (err, rows) => {
+    if (err) return res.status(500).json({ error: 'DB Error' });
+    res.json(rows);
+  });
+});
+
+app.post('/api/admin/approve-order', (req, res) => {
+  const { admin_id, order_id } = req.body;
+  if (parseInt(admin_id) !== ADMIN_ID) return res.status(403).json({ error: 'Unauthorized' });
+
+  // Эмулируем нажатие кнопки "Одобрить" в боте
+  // В боте за это отвечает callback_data: approve_${orderId}
+  // Мы можем вызвать функцию обработки напрямую или отправить фейковый колбек
+  // Но проще реализовать микро-логику здесь, вызывая существующие функции если они есть
+  // В index.js логика approve завязана на bot.on('callback_query').
+  
+  // Для надежности мы просто дернем логику approve_${orderId}
+  // Но так как у нас нет отдельной функции approveOrder, мы сделаем UPDATE и вызовем bot.sendMessage
+  db.get(`SELECT * FROM orders WHERE id = ?`, [order_id], (err, order) => {
+    if (err || !order) return res.status(404).json({ error: 'Order not found' });
+    if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' });
+
+    db.run(`UPDATE orders SET status = 'confirmed' WHERE id = ?`, [order_id], (err) => {
+      if (err) return res.status(500).json({ error: 'Update failed' });
+      
+      const userMsg = `✅ **Заказ #${order_id} одобрен через Сайт!**\n\n${order.product.includes('boost') ? 'Буст активирован!' : 'Ваш ключ уже в пути (см. Мои Ключи).'}`;
+      bot.sendMessage(order.user_id, userMsg, { parse_mode: 'Markdown' }).catch(()=>{});
+      
+      res.json({ success: true });
+    });
+  });
+});
+
 
 // ==========================================
 // 🚀 ЗАПУСК СЕРВЕРА

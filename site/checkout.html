@@ -42,8 +42,16 @@
                 </div>
 
                 <div id="auth-success" class="hidden" style="color: var(--accent-teal); margin-top: 10px; font-weight: bold; background: rgba(49, 180, 180, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--accent-teal);">
-                    ✅ Профиль подтвержден: <span id="auth-id-display"></span><br>
+                    ✅ Профиль подтвержден: <span id="auth-id-display" style="color:white"></span><br>
                     <small style="color:var(--text-secondary); font-weight: normal; margin-top: 5px; display: block;">Успешная авторизация. Бот готов прислать вам заказ!</small>
+                </div>
+            </div>
+
+            <!-- Доп. информация о балансе (Скрыто до авторизации) -->
+            <div id="user-profile-section" class="hidden glass-card" style="margin-bottom: 25px; padding: 15px; border-color: var(--accent-purple);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>💳 Ваш баланс в Боте: <strong id="user-balance-display">Загрузка...</strong></span>
+                    <button class="btn" style="padding:5px 15px; font-size:0.8rem;" onclick="showTopupModal()">Пополнить ➕</button>
                 </div>
             </div>
 

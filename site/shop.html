@@ -3,27 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyraxMods - Магазин</title>
+    <title>CyraxMods - Premium Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
         <a href="index.html" class="logo"><img src="logo.png" class="header-logo-img" alt="Logo">⚡️ CYRAX MODS</a>
+        <div id="user-profile-header" class="hidden" style="display:flex; align-items:center; gap:15px;">
+            <span id="header-user-name" style="font-weight:600;"></span>
+            <div id="header-balance" class="balance-badge">0 ₽</div>
+        </div>
     </header>
 
     <main class="container">
-        <h2 style="text-align: center; margin-bottom: 20px;">КЛЮЧИ</h2>
+        <!-- Products Section -->
+        <h2 class="section-title">📦 Ключи Активации</h2>
         <div class="products-grid" id="keys-grid">
-            <!-- Loading products via JS -->
-            <div style="text-align: center; width: 100%;"><div class="loader" style="display:inline-block"></div> Загрузка...</div>
+            <div style="text-align: center; width: 100%;"><div class="loader" style="display:inline-block"></div> Загрузка товаров...</div>
         </div>
 
-        <h2 style="text-align: center; margin-top: 50px; margin-bottom: 20px;">УСЛУГИ</h2>
-        <div class="products-grid" id="services-grid">
-            <!-- Loading services via JS -->
+        <h2 class="section-title">⚡️ Буст и Услуги</h2>
+        <div class="products-grid" id="services-grid"></div>
+
+        <!-- Resources Section -->
+        <h2 class="section-title">💎 Премиум Ресурсы</h2>
+        <div class="download-grid">
+            <div class="download-card glass-card">
+                <h3>Bridge</h3>
+                <p>Основной модуль для работы софта. Стабильность и скорость.</p>
+                <a href="https://cyrax.info/product/download/7" target="_blank" class="btn" style="width:100%">Скачать v7.1</a>
+            </div>
+            <div class="download-card glass-card">
+                <h3>Container</h3>
+                <p>Безопасная среда для запуска. Защита от обнаружения.</p>
+                <a href="https://cyrax.info/product/download/3" target="_blank" class="btn" style="width:100%">Скачать v3.2</a>
+            </div>
+            <div class="download-card glass-card">
+                <h3>Zygisk</h3>
+                <p>Дополнительные модули и патчи. Максимальный функционал.</p>
+                <a href="https://www.mediafire.com/folder/h9qqyuwscd3zl/" target="_blank" class="btn" style="width:100%">Зеркало MediaFire</a>
+            </div>
+        </div>
+
+        <!-- Social Section -->
+        <h2 class="section-title">🌐 Сообщество</h2>
+        <div class="social-grid">
+            <a href="https://t.me/cyraxml" target="_blank" class="social-btn neon-border-purple">
+                <span>📢 Канал @cyraxml</span>
+            </a>
+            <a href="https://t.me/CyRaXMod" target="_blank" class="social-btn neon-border-teal">
+                <span>💬 Чат @CyRaXMod</span>
+            </a>
+        </div>
+
+        <!-- Channel Feed Section -->
+        <div class="channel-feed-container glass-card">
+            <h3 style="margin-bottom:20px; text-align:center;">Последние новости @cyraxml</h3>
+            <div style="width:100%; height:400px; overflow:hidden; border-radius:12px; border: 1px solid var(--glass-border);">
+                <iframe src="https://t.me/s/cyraxml" style="width:100%; height:100%; border:none;" scrolling="yes"></iframe>
+            </div>
         </div>
     </main>
+
+    <footer style="padding:40px; text-align:center; border-top:1px solid var(--glass-border); margin-top:100px;">
+        <p style="color:var(--text-secondary); font-size:0.9rem;">&copy; 2026 CYRAX MODS. Все права защищены. Premium Distribution.</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>

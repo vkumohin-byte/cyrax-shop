@@ -3,31 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyraxMods - Ключи MLBB</title>
+    <title>CyraxMods - Premium Authorization</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <header>
-        <a href="index.html" class="logo"><img src="logo.png" class="header-logo-img" alt="Logo">⚡️ CYRAX MODS</a>
-    </header>
-
-    <main class="container">
-        <section class="hero">
-            <img src="logo.png" alt="CyraxMods Logo" class="site-logo">
-            <h1 class="hero-title"><span class="neon-text">CyraxMods</span> — Официальные ключи</h1>
-            <p>Выбирайте товар, оплачивайте удобным способом, и бот моментально выдаст вам ключ.</p>
+<body class="landing-page" style="overflow:hidden;">
+    <main class="container" style="display:flex; align-items:center; justify-content:center; height:90vh;">
+        <section class="hero glass-card" style="max-width:500px; width:100%; border-radius:24px; padding:50px;">
+            <img src="logo.png" alt="CyraxMods Logo" class="site-logo" style="width:140px; margin-bottom:30px; filter: drop-shadow(0 0 15px var(--accent-purple));">
+            <h1 class="hero-title" style="font-size:3rem; margin-bottom:15px;"><span class="neon-text">CYRAX</span></h1>
+            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:40px;">Авторизуйтесь через Telegram, чтобы получить доступ к эксклюзивным ключам и сервисам.</p>
             
-            <div class="steps-flow">
-                <div class="step"><span>1</span> Выбор товара</div>
-                <div class="step"><span>2</span> Оплата на сайте</div>
-                <div class="step"><span>3</span> Ключ в Telegram 🚀</div>
+            <div id="login-section" style="margin-top:20px; display:flex; justify-content:center;">
+                <!-- Telegram Widget Inject -->
+                <div id="tg-login-widget"></div>
             </div>
-            
-            <a href="shop.html" class="btn" style="font-size:1.2rem; padding: 18px 40px; margin-top:20px;">🛒 Перейти в магазин</a>
+
+            <div id="enter-section" class="hidden" style="margin-top:20px;">
+                <p style="margin-bottom:25px; color:var(--accent-teal); font-weight:600;">✅ Доступ разрешен: <span id="user-name-landing" style="color:white;"></span></p>
+                <a href="shop.html" class="btn" style="width:100%; font-size:1.3rem; padding: 20px;">🚀 ВОЙТИ В МАГАЗИН</a>
+            </div>
+
+            <!-- Trust Badges -->
+            <div style="margin-top:50px; display:flex; gap:20px; justify-content:center; opacity:0.6;">
+                <div style="font-size:0.8rem;">📦 Real-time Delivery</div>
+                <div style="font-size:0.8rem;">💎 Premium Quality</div>
+                <div style="font-size:0.8rem;">🛡 Secure Auth</div>
+            </div>
         </section>
     </main>
 
+    <footer style="position:fixed; bottom:20px; width:100%; text-align:center; opacity:0.5; font-size:0.8rem;">
+        &copy; 2026 CYRAX PROJECTS. Все права защищены.
+    </footer>
+
     <script src="script.js"></script>
+    <script>
+        // Специальный обработчик для лендинга
+        window.onTelegramAuth = function(user) {
+            sessionStorage.setItem('tgUser', JSON.stringify(user));
+            location.reload();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(sessionStorage.getItem('tgUser'));
+            if (user) {
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('enter-section').classList.remove('hidden');
+                document.getElementById('user-name-landing').innerText = `@${user.username || user.first_name}`;
+            } else {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = "https://telegram.org/js/telegram-widget.js?22";
+                script.setAttribute('data-telegram-login', 'cyraxxmod_bot'); // Убедитесь, что это имя вашего бота
+                script.setAttribute('data-size', 'large');
+                script.setAttribute('data-radius', '12');
+                script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+                script.setAttribute('data-request-access', 'write');
+                document.getElementById('tg-login-widget').appendChild(script);
+            }
+        });
+    </script>
 </body>
 </html>
