@@ -483,3 +483,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (window.location.pathname.endsWith('shop.html')) loadPrices();
 });
+// Rebuild trigger: 2026-03-19 09:25
