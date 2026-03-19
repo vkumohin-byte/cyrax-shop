@@ -6,6 +6,21 @@
     <title>CyraxMods - Оформление заказа</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // Глобальный обработчик авторизации до загрузки основного скрипта
+        window.onTelegramAuth = function(user) {
+            window.authorizedTgId = user.id;
+            const container = document.getElementById('telegram-login-container');
+            if (container) container.classList.add('hidden');
+            const successDiv = document.getElementById('auth-success');
+            if (successDiv) {
+                successDiv.classList.remove('hidden');
+                document.getElementById('auth-id-display').innerText = user.first_name + (user.username ? ` (@${user.username})` : '');
+            }
+            const errorMsg = document.getElementById('error-message');
+            if (errorMsg) errorMsg.classList.add('hidden');
+        };
+    </script>
 </head>
 <body>
     <header>
