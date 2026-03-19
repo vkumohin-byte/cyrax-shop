@@ -137,41 +137,6 @@ async function loadPrices() {
 }
 
 // --- Обработка входа через бота (Plan B) ---
-window.startBotAuth = async function() {
-    const token = Math.random().toString(36).substring(2, 15);
-    const botUsername = 'cyraxxmod_bot';
-    window.open(`https://t.me/${botUsername}?start=auth_${token}`, '_blank');
-    
-    // Показываем лоадер или статус
-    const btn = document.getElementById('login-bot-btn');
-    const originalText = btn ? btn.innerText : '';
-    if (btn) btn.innerText = '⌛ Ожидание подтверждения...';
-
-    // Начинаем опрос сервера
-    const pollInterval = setInterval(async () => {
-        try {
-            const res = await apiFetch(`/auth/verify?token=${token}`);
-            if (res.ok) {
-                const data = await res.json();
-                clearInterval(pollInterval);
-                if (window.onTelegramAuth) window.onTelegramAuth(data.user);
-                else {
-                    sessionStorage.setItem('tgUser', JSON.stringify(data.user));
-                    window.location.reload();
-                }
-            }
-        } catch (e) {
-            console.error("Auth poll error:", e);
-        }
-    }, 3000);
-
-    // Ограничение по времени - 5 минут
-    setTimeout(() => {
-        clearInterval(pollInterval);
-        if (btn) btn.innerText = originalText;
-    }, 5 * 60 * 1000);
-}
-
 window.buyProduct = function(productKey) {
   sessionStorage.setItem('selectedProduct', productKey);
   window.location.href = 'checkout.html';
@@ -261,25 +226,16 @@ async function selectMethod(method, btn) {
 }
 
 async function createOrder() {    
-    // Проверка авторизации или ввод юзернейма
-    let telegramUser = JSON.parse(sessionStorage.getItem('tgUser'));
-    let username = "";
-
-    if (telegramUser) {
-        username = telegramUser.username || telegramUser.id.toString();
-    } else {
-        const guestInput = document.getElementById('guest-username');
-        username = guestInput ? guestInput.value.trim() : "";
-        
-        if (!username) {
-            alert("Пожалуйста, введите ваш Telegram никнейм для связи.");
-            if (guestInput) guestInput.focus();
-            return;
-        }
-        // Создаем временный объект для гостя
-        telegramUser = { id: 0, username: username, first_name: 'Guest' };
+    // Вся аутентификация убрана, работаем только с введенным никнеймом
+    const guestInput = document.getElementById('guest-username');
+    const username = guestInput ? guestInput.value.trim() : "";
+    
+    if (!username) {
+        alert("Пожалуйста, введите ваш Telegram для связи и получения ключа.");
+        if (guestInput) guestInput.focus();
+        return;
     }
-  
+   
   if (!checkoutState.product || !checkoutState.currency || !checkoutState.method) {
     alert("Пожалуйста, выберите валюту и метод оплаты.");
     return;
@@ -288,10 +244,9 @@ async function createOrder() {
   const isTopup = checkoutState.product === 'topup_balance';
   const endpoint = isTopup ? '/site/topup-request' : '/site/create-order';
   // IMPORTANT: send telegram_id as string "guest" for guests to avoid JS falsy check on 0
-  const tgId = telegramUser.id === 0 ? 'guest' : telegramUser.id;
   const body = isTopup 
-    ? { telegram_id: tgId, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method, username: username }
-    : { telegram_id: tgId, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method, username: username };
+    ? { telegram_id: 'guest', amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method, username: username }
+    : { telegram_id: 'guest', product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method, username: username };
 
   const payBtn = document.getElementById('pay-btn');
   payBtn.disabled = true;
