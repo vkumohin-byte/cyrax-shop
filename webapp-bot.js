@@ -383,9 +383,13 @@ app.get('/api/order-status/:orderId', async (req, res) => {
 // ✅ API: Создание заказа с сайта
 app.post('/api/site/create-order', async (req, res) => {
   try {
-    const { telegram_id, product, currency, method } = req.body;
-    if (!telegram_id || !product || !currency || !method) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const { telegram_id, product, currency, method, username } = req.body;
+    // telegram_id can be 'guest', 0, or a real numeric ID
+    const isGuest = !telegram_id || telegram_id === 'guest' || telegram_id === 0;
+    const userId = isGuest ? 0 : parseInt(telegram_id);
+    
+    if (!product || !currency || !method) {
+      return res.status(400).json({ error: 'Missing required fields: product, currency, method' });
     }
 
     const price = PRICES[product]?.[currency];
@@ -394,29 +398,31 @@ app.post('/api/site/create-order', async (req, res) => {
     const result = await dbRun(
       `INSERT INTO orders (user_id, product, amount, currency, payment_method, status, created_at)
        VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
-      [parseInt(telegram_id), product, price, currency, method]
+      [userId, product, price, currency, method]
     );
 
     const orderId = result.lastID;
     const periodName = PERIOD_NAMES['ru'][product] || product;
     const methodName = METHOD_NAMES['ru'][method] || method;
 
-    // Send notification to user
+    // Send notification to user (only if real TG user)
     const userMsg = `✅ *Заказ #${orderId} создан!*\n\n🔑 ${periodName}\n💰 ${formatPrice(price, currency)}\n💳 ${methodName}\n\n⚠️ После оплаты отправьте скриншот чека в этот чат.`;
-    
-    bot.sendMessage(telegram_id, userMsg, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '❌ Отменить заказ', callback_data: `cancel_order_${orderId}` }]
-        ]
-      }
-    }).catch(e => console.error('Site order notify error (user):', e.message));
+    if (!isGuest && userId > 0) {
+      bot.sendMessage(userId, userMsg, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '❌ Отменить заказ', callback_data: `cancel_order_${orderId}` }]
+          ]
+        }
+      }).catch(e => console.error('Site order notify error (user):', e.message));
+    }
 
     // Send notification to admin
     if (ADMIN_ID) {
+      const clientInfo = isGuest ? `Гость: ${username || 'без ника'}` : `ID: ${userId}`;
       bot.sendMessage(ADMIN_ID,
-        `🛒 *Новый заказ с САЙТА!*\n\n👤 ID: ${telegram_id}\n🔑 ${periodName}\n💰 ${formatPrice(price, currency)}\n💳 ${methodName}\n📦 Заказ #${orderId}`
+        `🛒 *Новый заказ с САЙТА!*\n\n👤 ${clientInfo}\n🔑 ${periodName}\n💰 ${formatPrice(price, currency)}\n💳 ${methodName}\n📦 Заказ #${orderId}`
       ).catch(() => {});
     }
 
@@ -424,6 +430,24 @@ app.post('/api/site/create-order', async (req, res) => {
   } catch (e) {
     console.error('Create order error:', e);
     res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// ✅ Admin Login (Password based)
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Reyter957';
+  if (password === ADMIN_PASSWORD) {
+    res.json({
+      success: true,
+      user: {
+        id: ADMIN_ID || 5187702657,
+        username: process.env.ADMIN_USERNAME || 'admin',
+        first_name: 'Administrator'
+      }
+    });
+  } else {
+    res.status(401).json({ success: false, error: 'Invalid password' });
   }
 });
 

@@ -137,18 +137,13 @@ const WITHDRAWAL_STATUS = Object.freeze({
 
 
 // ==========================================
-// 🛡️ АВТОРИЗАЦИЯ (PLAN B)
-// ==========================================
-const authSessions = new Map(); // token -> user_data
-const AUTH_TOKEN_EXPIRY = 5 * 60 * 1000; // 5 минут
-
-// ==========================================
 // 🛡️ АВТОРИЗАЦИЯ (PLAN B & ADMIN BYPASS)
 // ==========================================
 const authSessions = new Map(); // token -> user_data
 const adminSessions = new Set(); // Храним токены админ-сессий
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'cyrax_admin_123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Reyter957';
 const AUTH_TOKEN_EXPIRY = 5 * 60 * 1000; // 5 минут
+
 
 // ==========================================
 // 🗄️ ПУТЬ К БАЗЕ ДАННЫХ
@@ -20546,12 +20541,12 @@ app.post('/api/site/create-order', (req, res) => {
     return res.status(403).json({ error: 'Продажа ключей временно приостановлена' });
   }
 
-  // Для гостя telegram_id может быть 0
+  // Для гостя telegram_id может быть 0 или 'guest'
   if (!product || !currency || !method) return res.status(400).json({ error: 'Missing params' });
   const price = PRICES[product]?.[currency];
   if (!price) return res.status(400).json({ error: 'Invalid product or currency' });
 
-  const userId = parseInt(telegram_id) || 0;
+  const userId = (telegram_id === 'guest' || !telegram_id) ? 0 : (parseInt(telegram_id) || 0);
 
   db.run(
     `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at, username) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'), ?)`,
@@ -20586,7 +20581,7 @@ app.post('/api/site/create-order', (req, res) => {
 // --- Admin Login (Password based) ---
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'cyrax_admin_123';
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Reyter957';
 
     if (password === ADMIN_PASSWORD) {
         // Возвращаем объект админа

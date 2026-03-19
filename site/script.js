@@ -181,7 +181,11 @@ async function setupCheckout() {
       if (!product) { window.location.href = 'shop.html'; return; }
       document.getElementById('selected-product-info').innerText = `🛍️ Товар: ${PERIOD_NAMES[product] || product}`;
       checkoutState.product = product;
-      checkoutState.currency = 'USD'; // По умолчанию
+      // Auto-select RUB by default
+      setTimeout(() => {
+        const rubBtn = document.querySelector('[data-currency="RUB"]');
+        if (rubBtn) rubBtn.click();
+      }, 100);
   }
 
   document.querySelectorAll('.currency-selector .selector-btn').forEach(btn => {
@@ -267,8 +271,11 @@ async function createOrder() {
 
   const isTopup = checkoutState.product === 'topup_balance';
   const endpoint = isTopup ? '/site/topup-request' : '/site/create-order';
-  const body = isTopup ? { telegram_id: telegramUser.id, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method, username: username }
-                        : { telegram_id: telegramUser.id, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method, username: username };
+  // IMPORTANT: send telegram_id as string "guest" for guests to avoid JS falsy check on 0
+  const tgId = telegramUser.id === 0 ? 'guest' : telegramUser.id;
+  const body = isTopup 
+    ? { telegram_id: tgId, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method, username: username }
+    : { telegram_id: tgId, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method, username: username };
 
   const payBtn = document.getElementById('pay-btn');
   payBtn.disabled = true;
@@ -454,6 +461,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadUserBalance();
     }
 
-    if (window.location.pathname.includes('checkout.html')) setupCheckout();
+    if (window.location.pathname.includes('checkout.html')) {
+        setupCheckout();
+        if (!user) updateOrderUI();
+    }
     if (window.location.pathname.endsWith('shop.html')) loadPrices();
 });

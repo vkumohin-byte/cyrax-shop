@@ -3,110 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyraxMods - Premium Authorization</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <meta name="referrer" content="no-referrer-when-downgrade">
-    <meta name="description" content="CyraxMods - Элитный магазин игровых ключей и профессионального буста. Безопасная оплата, мгновенная доставка и 24/7 поддержка.">
-    <meta name="keywords" content="MLBB, CyraxMods, Ключи, Буст, Mobile Legends, Купить ключи">
-    <meta property="og:title" content="CyraxMods — Премиальный магазин ключей">
-    <meta property="og:description" content="Официальные ключи и услуги буста для MLBB. Стань легендой вместе с CyraxMods.">
-    <meta property="og:image" content="logo.png">
+    <title>CyraxMods — Premium Software</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#07090D">
+    <style>
+        :root {
+            --bg: #07090D;
+            --purple: #8B5CF6;
+            --teal: #10B981;
+            --glass: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.08);
+            --dim: #94A3B8;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:var(--bg);color:#F8FAFC;font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+        /* Animated blobs */
+        .blobs{position:fixed;inset:0;z-index:-1;filter:blur(120px);opacity:.55}
+        .b1{position:absolute;width:550px;height:550px;border-radius:50%;background:linear-gradient(135deg,var(--purple),#C026D3);top:-120px;left:-120px;animation:f1 22s infinite alternate}
+        .b2{position:absolute;width:450px;height:450px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#06B6D4);bottom:-100px;right:-100px;animation:f2 18s infinite alternate-reverse}
+        @keyframes f1{to{transform:translate(160px,110px) scale(1.1)}}
+        @keyframes f2{to{transform:translate(-130px,-90px) scale(1.1)}}
+
+        /* Card */
+        .card{background:rgba(13,17,23,.72);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--border);border-radius:40px;padding:70px 50px;width:90%;max-width:460px;text-align:center;box-shadow:0 50px 100px -25px rgba(0,0,0,.8);position:relative;z-index:10;animation:fadeUp .6s ease-out}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+        /* Logo */
+        .logo-img{width:120px;height:120px;border-radius:50%;padding:4px;background:linear-gradient(135deg,var(--purple),var(--teal));box-shadow:0 0 60px rgba(139,92,246,.35);margin-bottom:2rem;object-fit:cover;cursor:pointer;transition:.4s cubic-bezier(.175,.885,.32,1.275)}
+        .logo-img:hover{transform:scale(1.06) rotate(3deg)}
+        .logo-img:active{transform:scale(.94)}
+
+        /* Typography */
+        h1{font-family:'Outfit',sans-serif;font-size:4rem;font-weight:800;letter-spacing:-3px;background:linear-gradient(to bottom right,#fff 40%,#94A3B8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .sub{color:var(--dim);font-size:1.05rem;font-weight:300;line-height:1.6;margin-bottom:50px}
+
+        /* Buttons */
+        .btn-main{display:flex;align-items:center;justify-content:center;width:100%;padding:20px;background:#fff;color:#000;text-decoration:none;border-radius:18px;font-weight:800;font-size:1.15rem;letter-spacing:.5px;transition:.35s cubic-bezier(.4,0,.2,1);box-shadow:0 18px 40px -10px rgba(255,255,255,.18);border:none;cursor:pointer}
+        .btn-main:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 25px 50px -10px rgba(255,255,255,.25);background:#f1f5f9}
+        .btn-sec{display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:var(--glass);color:#fff;border:1px solid var(--border);border-radius:18px;font-weight:500;font-size:.95rem;cursor:pointer;transition:.25s;text-decoration:none;margin-top:12px}
+        .btn-sec:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.25);transform:translateY(-2px)}
+
+        /* Footer dots */
+        .dots{display:flex;gap:22px;justify-content:center;margin-top:55px;opacity:.4}
+        .dot-item{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:2px;display:flex;align-items:center;gap:7px}
+        .dot-circle{width:6px;height:6px;border-radius:50%;box-shadow:0 0 10px currentColor}
+        .teal{color:var(--teal)}.purple{color:var(--purple)}
+
+        /* Loader */
+        #loader{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;transition:opacity .4s}
+        .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
 </head>
-<body class="landing-page" style="overflow:hidden;">
-    <main class="container" style="display:flex; align-items:center; justify-content:center; height:90vh;">
-        <section class="hero glass-card" style="max-width:500px; width:100%; border-radius:24px; padding:50px;">
-            <img src="logo.png" alt="CyraxMods Logo" class="site-logo" style="width:140px; margin-bottom:30px; filter: drop-shadow(0 0 15px var(--accent-purple));">
-            <h1 class="hero-title" style="font-size:3rem; margin-bottom:15px;"><span class="neon-text">CYRAX</span></h1>
-            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:40px;">Премиальное ПО и профессиональный буст для MLBB.</p>
-            
-            <div id="login-section" style="margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:15px;">
-                <a href="shop.html" class="btn shimmer-btn" style="width:100%; max-width:280px; font-weight:700; padding: 20px; font-size: 1.2rem; text-decoration:none;">
-                    🚀 ПЕРЕЙТИ В МАГАЗИН
-                </a>
-                
-                <div style="color:var(--text-secondary); font-size:0.9rem; margin-top:5px; opacity: 0.5;">или</div>
+<body>
+    <div id="loader"><div class="spinner"></div></div>
+    <div class="blobs"><div class="b1"></div><div class="b2"></div></div>
 
-                <button id="bot-auth-btn" class="btn glass-card" style="width:100%; max-width:280px; font-weight:500; border: 1px solid rgba(255,255,255,0.1); color:white;">
-                    🤖 Авторизация через бота
-                </button>
+    <main class="card">
+        <img src="logo.png" alt="CyraxMods" class="logo-img" id="logo-btn">
+        <h1>CYRAX</h1>
+        <p class="sub">Premium software & elite boosting for Mobile Legends: Bang Bang</p>
 
-            </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+            <a href="shop.html" class="btn-main">🚀 ENTER STORE</a>
+            <a href="shop.html#auth" class="btn-sec">🤖 Bot Authorization</a>
+        </div>
 
-            <div id="enter-section" class="hidden" style="margin-top:20px;">
-                <p style="margin-bottom:25px; color:var(--accent-teal); font-weight:600;">✅ Доступ разрешен: <span id="user-name-landing" style="color:white;"></span></p>
-                <a href="shop.html" class="btn shimmer-btn" style="width:100%; font-size:1.3rem; padding: 20px;">🚀 ВОЙТИ В МАГАЗИН</a>
-            </div>
-
-            <!-- Security Badges -->
-            <div class="security-badges" style="margin-top: 60px; opacity: 0.5;">
-                <div class="badge">🛡️ SSL Secure</div>
-                <div class="badge">💎 Premium Only</div>
-            </div>
-        </section>
+        <div class="dots">
+            <div class="dot-item teal"><span class="dot-circle" style="background:var(--teal)"></span> Online</div>
+            <div class="dot-item purple"><span class="dot-circle" style="background:var(--purple)"></span> Secure</div>
+        </div>
     </main>
 
     <script>
-        // Глобальный обработчик (должен быть доступен Telegram скрипту)
-        window.onTelegramAuth = function(user) {
-            console.log("Auth event received:", user);
-            if (user) {
-                sessionStorage.setItem('tgUser', JSON.stringify(user));
-                const loginSec = document.getElementById('login-section');
-                const enterSec = document.getElementById('enter-section');
-                const userName = document.getElementById('user-name-landing');
-                
-                if (loginSec) loginSec.classList.add('hidden');
-                if (enterSec) enterSec.classList.remove('hidden');
-                if (userName) userName.innerText = `@${user.username || user.first_name}`;
-                
-                // Авто-переход через 1 секунду
-                setTimeout(() => { window.location.href = 'shop.html'; }, 1000);
-            }
-        };
+        // Fade-out loader
+        window.addEventListener('load', () => {
+            const l = document.getElementById('loader');
+            l.style.opacity = '0';
+            setTimeout(() => l.remove(), 400);
+        });
 
-        // --- Обработка входа через бота (Plan B) ---
-        // Перенесено в script.js
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = JSON.parse(sessionStorage.getItem('tgUser'));
-            if (user) {
-                onTelegramAuth(user);
-            }
-
-            const botBtn = document.getElementById('bot-auth-btn');
-            if (botBtn) botBtn.onclick = startBotAuth;
-
-            // Скрытый вход для админа (Двойной клик по логотипу)
-            let logoClicks = 0;
-            const logoImg = document.querySelector('.site-logo');
-            if (logoImg) logoImg.onclick = () => {
-                logoClicks++;
-                if (logoClicks >= 5) {
-                    const pass = prompt("Админ-панель: Введите пароль");
-                    if (pass) {
-                    const API_BASE = window.location.origin.includes('localhost') ? 'http://localhost:5500/api' : 'https://cyrax-bot-0vwr.onrender.com/api';
-                    fetch(`${API_BASE}/admin/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ password: pass })
-                    })
-                    .then(r => r.json())
-                    .then(d => {
-                        if (d.success) {
-                            sessionStorage.setItem('tgUser', JSON.stringify(d.user));
-                            window.location.href = 'shop.html';
-                        } else {
-                            alert("Ошибка доступа: Неверный пароль");
-                        }
-                    })
-                    .catch(e => alert("Ошибка соединения с сервером"));
+        // Admin login — 5 clicks on logo
+        let _c = 0;
+        document.getElementById('logo-btn').addEventListener('click', () => {
+            _c++;
+            if (_c >= 5) {
+                _c = 0;
+                const pw = prompt('🔐 Admin access — enter password:');
+                if (!pw) return;
+                fetch('https://cyrax-bot-0vwr.onrender.com/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pw })
+                })
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(d => {
+                    if (d.success) {
+                        sessionStorage.setItem('tgUser', JSON.stringify(d.user));
+                        window.location.href = 'shop.html';
+                    } else {
+                        alert('❌ Access denied');
                     }
-                    logoClicks = 0;
-                }
-            };
+                })
+                .catch(e => {
+                    console.error('Admin login error:', e);
+                    alert('⚠️ Server connection failed.\nBackend may be sleeping — wait 30s and retry.');
+                });
+            }
         });
     </script>
-    <script src="script.js"></script>
 </body>
 </html>
