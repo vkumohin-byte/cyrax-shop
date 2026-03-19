@@ -1,9 +1,5 @@
-.env
-shop.db*
-*.log
-index.js
-webapp-bot.js
-simple.js
-test.js
-node_modules
-webapp/
+*
+!public/
+!public/**
+!vercel.json
+!.vercelignore
