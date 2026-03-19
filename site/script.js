@@ -109,7 +109,7 @@ async function loadPrices() {
       
       card.innerHTML = `
         <div class="product-title">${icon} ${name}</div>
-        <div class="product-price">${displayPrice} <span style="font-size: 0.9rem; color: var(--text-secondary);">(RUB)</span></div>
+        <div class="product-price">${displayPrice} <span style="font-size: 0.8rem; color: var(--text-secondary); opacity: 0.7;">(RUB)</span></div>
         <button class="btn" style="width: 100%; border-radius: 10px;" onclick="buyProduct('${key}')">Купить</button>
       `;
       if (isKey) keysGrid.appendChild(card);
@@ -260,10 +260,15 @@ async function createOrder() {
         telegramUser = { id: 0, username: username, first_name: 'Guest' };
     }
   
+  if (!checkoutState.product || !checkoutState.currency || !checkoutState.method) {
+    alert("Пожалуйста, выберите валюту и метод оплаты.");
+    return;
+  }
+
   const isTopup = checkoutState.product === 'topup_balance';
   const endpoint = isTopup ? '/site/topup-request' : '/site/create-order';
-  const body = isTopup ? { telegram_id: telegramUser.id, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method, username: telegramUser.username }
-                        : { telegram_id: telegramUser.id, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method, username: telegramUser.username };
+  const body = isTopup ? { telegram_id: telegramUser.id, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method, username: username }
+                        : { telegram_id: telegramUser.id, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method, username: username };
 
   const payBtn = document.getElementById('pay-btn');
   payBtn.disabled = true;

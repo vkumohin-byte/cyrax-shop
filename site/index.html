@@ -18,28 +18,19 @@
         <section class="hero glass-card" style="max-width:500px; width:100%; border-radius:24px; padding:50px;">
             <img src="logo.png" alt="CyraxMods Logo" class="site-logo" style="width:140px; margin-bottom:30px; filter: drop-shadow(0 0 15px var(--accent-purple));">
             <h1 class="hero-title" style="font-size:3rem; margin-bottom:15px;"><span class="neon-text">CYRAX</span></h1>
-            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:40px;">Авторизуйтесь для синхронизации профиля или продолжайте как гость.</p>
+            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:40px;">Премиальное ПО и профессиональный буст для MLBB.</p>
             
             <div id="login-section" style="margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:15px;">
-                <button id="bot-auth-btn" class="btn shimmer-btn" style="background:var(--accent-teal); color:black; width:100%; max-width:260px; font-weight:700; padding: 18px;">
-                    🤖 ВОЙТИ ЧЕРЕЗ ТЕЛЕГРАМ
-                </button>
-                
-                <div style="color:var(--text-secondary); font-size:0.9rem; margin-top:5px;">или</div>
-
-                <a href="shop.html" class="btn glass-card" style="width:100%; max-width:260px; font-weight:500; border: 1px solid rgba(255,255,255,0.1); text-decoration:none; color:white; display:flex; align-items:center; justify-content:center;">
-                    👤 ПРОДОЛЖИТЬ КАК ГОСТЬ
+                <a href="shop.html" class="btn shimmer-btn" style="width:100%; max-width:280px; font-weight:700; padding: 20px; font-size: 1.2rem; text-decoration:none;">
+                    🚀 ПЕРЕЙТИ В МАГАЗИН
                 </a>
+                
+                <div style="color:var(--text-secondary); font-size:0.9rem; margin-top:5px; opacity: 0.5;">или</div>
 
-                <!-- Статическая кнопка-виджет (скрыта по умолчанию, если не грузится) -->
-                <div style="margin-top:20px; opacity:0.7; transform: scale(0.9);">
-                    <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                            data-telegram-login="cyraxxmod_bot" 
-                            data-size="medium" 
-                            data-radius="12" 
-                            data-onauth="onTelegramAuth(user)" 
-                            data-request-access="write"></script>
-                </div>
+                <button id="bot-auth-btn" class="btn glass-card" style="width:100%; max-width:280px; font-weight:500; border: 1px solid rgba(255,255,255,0.1); color:white;">
+                    🤖 Авторизация через бота
+                </button>
+
             </div>
 
             <div id="enter-section" class="hidden" style="margin-top:20px;">
@@ -48,19 +39,9 @@
             </div>
 
             <!-- Security Badges -->
-            <div class="security-badges">
-                <div class="badge">
-                    <span class="badge-icon">🛡️</span>
-                    <span>SSL Secure</span>
-                </div>
-                <div class="badge">
-                    <span class="badge-icon">💎</span>
-                    <span>Premium Only</span>
-                </div>
-                <div class="badge">
-                    <span class="badge-icon">✉️</span>
-                    <span>Direct TG Auth</span>
-                </div>
+            <div class="security-badges" style="margin-top: 60px; opacity: 0.5;">
+                <div class="badge">🛡️ SSL Secure</div>
+                <div class="badge">💎 Premium Only</div>
             </div>
         </section>
     </main>
@@ -104,20 +85,22 @@
                 if (logoClicks >= 5) {
                     const pass = prompt("Админ-панель: Введите пароль");
                     if (pass) {
-                        fetch('https://cyrax-shop.onrender.com/api/admin/login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ password: pass })
-                        })
-                        .then(r => r.json())
-                        .then(d => {
-                            if (d.success) {
-                                sessionStorage.setItem('tgUser', JSON.stringify(d.user));
-                                window.location.href = 'shop.html';
-                            } else {
-                                alert("Ошибка доступа");
-                            }
-                        });
+                    const API_BASE = window.location.origin.includes('localhost') ? 'http://localhost:5500/api' : 'https://cyrax-bot-0vwr.onrender.com/api';
+                    fetch(`${API_BASE}/admin/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: pass })
+                    })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) {
+                            sessionStorage.setItem('tgUser', JSON.stringify(d.user));
+                            window.location.href = 'shop.html';
+                        } else {
+                            alert("Ошибка доступа: Неверный пароль");
+                        }
+                    })
+                    .catch(e => alert("Ошибка соединения с сервером"));
                     }
                     logoClicks = 0;
                 }
