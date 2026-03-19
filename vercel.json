@@ -3,11 +3,5 @@
   "outputDirectory": "site",
   "devCommand": null,
   "installCommand": null,
-  "framework": null,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/site/index.html"
-    }
-  ]
+  "framework": null
 }
