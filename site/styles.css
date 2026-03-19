@@ -619,6 +619,49 @@ header {
   100% { transform: translateX(100%) rotate(45deg); }
 }
 
+.products-grid {
+    justify-items: center;
+    justify-content: center;
+}
+
+/* Premium Footer Buttons */
+.shop-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 60px;
+    padding-bottom: 40px;
+}
+
+.btn-footer {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-footer:hover {
+    background: rgba(123, 104, 238, 0.1);
+    border-color: var(--accent-purple);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(123, 104, 238, 0.2);
+}
+
+.btn-footer i {
+    font-size: 1.1rem;
+}
+
 /* Neon text glow */
 .neon-text {
   color: #fff;
