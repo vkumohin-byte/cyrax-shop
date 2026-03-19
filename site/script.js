@@ -55,10 +55,11 @@ async function loadPrices() {
       
       const displayPrice = currencyPrices['RUB'] ? formatPrice(currencyPrices['RUB'], 'RUB') : formatPrice(currencyPrices['USD'] || 0, 'USD');
       
+      const icon = isKey ? '🔑' : '⚡';
       card.innerHTML = `
-        <div class="product-title">${name}</div>
+        <div class="product-title">${icon} ${name}</div>
         <div class="product-price">${displayPrice} <span style="font-size: 1rem; color: var(--text-secondary);">(RUB)</span></div>
-        <button class="btn" onclick="buyProduct('${key}')">Купить</button>
+        <button class="btn" style="width: 100%; border-radius: 8px;" onclick="buyProduct('${key}')">Купить</button>
       `;
       
       if (isKey) {
