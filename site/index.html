@@ -20,7 +20,7 @@
             <h1 class="hero-title" style="font-size:3rem; margin-bottom:15px;"><span class="neon-text">CYRAX</span></h1>
             <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:40px;">Авторизуйтесь через Telegram для доступа в магазин.</p>
             
-            <div id="login-section" style="margin-top:20px; display:flex; justify-content:center;">
+            <div id="login-section" style="margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:15px;">
                 <!-- Статический виджет Telegram -->
                 <script async src="https://telegram.org/js/telegram-widget.js?22" 
                         data-telegram-login="cyraxxmod_bot" 
@@ -28,6 +28,12 @@
                         data-radius="12" 
                         data-onauth="onTelegramAuth(user)" 
                         data-request-access="write"></script>
+                
+                <div style="color:var(--text-secondary); font-size:0.9rem;">или</div>
+
+                <button id="bot-auth-btn" class="btn shimmer-btn" style="background:var(--accent-teal); color:black; width:100%; max-width:240px; font-weight:600;">
+                    🤖 ВОЙТИ ЧЕРЕЗ БОТА
+                </button>
             </div>
 
             <div id="enter-section" class="hidden" style="margin-top:20px;">
@@ -72,11 +78,38 @@
             }
         };
 
+        // --- Обработка входа через бота (Plan B) ---
+        async function startBotAuth() {
+            const token = Math.random().toString(36).substring(2, 15);
+            const botUser = 'cyraxxmod_bot';
+            window.open(`https://t.me/${botUser}?start=auth_${token}`, '_blank');
+            
+            // Начинаем опрос сервера
+            const pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`https://cyrax-shop.onrender.com/api/auth/verify?token=${token}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        clearInterval(pollInterval);
+                        onTelegramAuth(data.user);
+                    }
+                } catch (e) {
+                    console.error("Auth poll error:", e);
+                }
+            }, 3000);
+
+            // Ограничение по времени - 5 минут
+            setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(sessionStorage.getItem('tgUser'));
             if (user) {
                 onTelegramAuth(user);
             }
+
+            const botBtn = document.getElementById('bot-auth-btn');
+            if (botBtn) botBtn.onclick = startBotAuth;
         });
     </script>
     <script src="script.js"></script>

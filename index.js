@@ -137,6 +137,12 @@ const WITHDRAWAL_STATUS = Object.freeze({
 
 
 // ==========================================
+// 🛡️ АВТОРИЗАЦИЯ (PLAN B)
+// ==========================================
+const authSessions = new Map(); // token -> user_data
+const AUTH_TOKEN_EXPIRY = 5 * 60 * 1000; // 5 минут
+
+// ==========================================
 // 🗄️ ПУТЬ К БАЗЕ ДАННЫХ
 // ==========================================
 // На бесплатном Render нет персистентного диска.
@@ -6162,9 +6168,26 @@ function showManagerOrders(chatId, userId) {
 // ==========================================
 // 🤖 ОБРАБОТКА /start и /admin
 // ==========================================
-bot.onText(/\/start/, async (msg) => {
+bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
   const user = msg.from;
   const chatId = msg.chat.id;
+  const startParam = match[1];
+
+  // --- Обработка авторизации для сайта (Plan B) ---
+  if (startParam && startParam.startsWith('auth_')) {
+    const token = startParam.split('auth_')[1];
+    if (token) {
+      authSessions.set(token, {
+        id: user.id,
+        first_name: user.first_name,
+        username: user.username,
+        auth_date: Math.floor(Date.now() / 1000)
+      });
+      setTimeout(() => authSessions.delete(token), AUTH_TOKEN_EXPIRY);
+      bot.sendMessage(chatId, "✅ <b>Авторизация подтверждена!</b>\n\nТеперь вернитесь на сайт, вход произойдет автоматически.", { parse_mode: 'HTML' }).catch(() => {});
+      return;
+    }
+  }
 
   // В групповых чатах /start игнорируем — для групп есть /cyrax
   if (msg.chat.type !== 'private') return;
