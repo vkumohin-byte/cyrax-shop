@@ -20,13 +20,15 @@
 
             <!-- Шаг 1 -->
             <div class="form-group">
-                <label for="telegram-id">Шаг 1: Ваш Telegram Никнейм (обязательно)</label>
-                <input type="text" id="telegram-id" class="form-control" placeholder="Например: @ivan123">
-                <small style="color: var(--text-secondary); margin-top: 5px; display: block;">Укажите ваш логин в Telegram (с @ или без)</small>
+                <label>Шаг 1: Авторизуйтесь, чтобы бот мог прислать вам ключ</label>
                 
-                <div class="alert-box">
-                    ⚠️ <strong>КРИТИЧЕСКИ ВАЖНО:</strong> Бот физически не сможет прислать вам ключ, если вы никогда не писали ему!<br><br>
-                    Обязательно перейдите в <b><a href="https://t.me/cyraxxmod_bot" target="_blank">@cyraxxmod_bot</a></b> и нажмите <b>СТАРТ</b> перед оплатой!
+                <div id="telegram-login-container" style="margin-top: 15px;">
+                    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="cyraxxmod_bot" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
+                </div>
+
+                <div id="auth-success" class="hidden" style="color: var(--accent-teal); margin-top: 10px; font-weight: bold; background: rgba(49, 180, 180, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--accent-teal);">
+                    ✅ Вы успешно авторизованы как <span id="auth-id-display"></span>!<br>
+                    <small style="color:var(--text-secondary); font-weight: normal; margin-top: 5px; display: block;">Бот получил разрешение прислать вам ключ после оплаты.</small>
                 </div>
             </div>
 

@@ -91,6 +91,15 @@ let checkoutState = {
   telegramId: null
 };
 
+window.onTelegramAuth = function(user) {
+  window.authorizedTgId = user.id;
+  document.getElementById('telegram-login-container').classList.add('hidden');
+  const successDiv = document.getElementById('auth-success');
+  successDiv.classList.remove('hidden');
+  document.getElementById('auth-id-display').innerText = user.first_name + (user.username ? ` (@${user.username})` : '');
+  document.getElementById('error-message').classList.add('hidden');
+};
+
 async function setupCheckout() {
   const product = sessionStorage.getItem('selectedProduct');
   if (!product) {
@@ -190,20 +199,23 @@ async function selectMethod(method, btnElement) {
 }
 
 async function createOrder() {
-  const telegramIdInput = document.getElementById('telegram-id').value;
   const errorMsg = document.getElementById('error-message');
   
-  if (!telegramIdInput || telegramIdInput.length < 3) {
-    errorMsg.innerText = 'Пожалуйста, введите корректный Telegram Никнейм';
+  if (!window.authorizedTgId) {
+    errorMsg.innerText = 'Пожалуйста, авторизуйтесь через Telegram в Шаге 1';
     errorMsg.classList.remove('hidden');
     return;
   }
   
-  checkoutState.telegramId = telegramIdInput;
+  if (!checkoutState.method) {
+    errorMsg.innerText = 'Выберите метод оплаты';
+    errorMsg.classList.remove('hidden');
+    return;
+  }
   
   const payBtn = document.getElementById('pay-btn');
-  payBtn.classList.add('loading');
   payBtn.disabled = true;
+  payBtn.classList.add('loading');
   errorMsg.classList.add('hidden');
   
   try {
@@ -211,7 +223,7 @@ async function createOrder() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        telegram_username: telegramIdInput,
+        telegram_id: window.authorizedTgId,
         product: checkoutState.product,
         currency: checkoutState.currency,
         method: checkoutState.method
