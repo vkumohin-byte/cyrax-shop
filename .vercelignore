@@ -4,3 +4,10 @@ shop.db
 shop.db-shm
 shop.db-wal
 *.log
+package.json
+package-lock.json
+index.js
+webapp-bot.js
+test.js
+simple.js
+webapp/
