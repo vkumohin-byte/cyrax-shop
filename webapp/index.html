@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CyraxMods — Магазин</title>
+  <meta name="description" content="CyraxMods — витрина ключей и услуг для MLBB">
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================
+       🎨 CSS DESIGN SYSTEM — CyraxMods WebApp
+       Glassmorphism + Neon Accents + Dark Theme
+       ========================================== */
+
+    :root {
+      --bg-primary: #0A0C10;
+      --bg-secondary: #0E1117;
+      --bg-card: rgba(20, 25, 35, 0.7);
+      --bg-card-hover: rgba(30, 35, 50, 0.85);
+      --bg-modal: rgba(10, 12, 16, 0.92);
+      --accent: #8774E1;
+      --accent-glow: rgba(135, 116, 225, 0.3);
+      --accent-light: #A594F9;
+      --secondary: #31B4B4;
+      --secondary-glow: rgba(49, 180, 180, 0.25);
+      --text-primary: #FFFFFF;
+      --text-secondary: #AAAAAA;
+      --text-muted: #666666;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(135, 116, 225, 0.25);
+      --success: #4CAF50;
+      --warning: #FF9800;
+      --danger: #F44336;
+      --card-blur: 20px;
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 24px;
+      --shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+      --shadow-accent: 0 0 20px rgba(135, 116, 225, 0.15);
+      --transition: 0.3s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      padding-bottom: 80px; /* Пространство для навигации */
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(135, 116, 225, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(49, 180, 180, 0.06) 0%, transparent 50%),
+        var(--bg-primary);
+    }
+
+    /* ==========================================
+       📱 HEADER — Логотип + Аватар + Баланс
+       ========================================== */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 12, 16, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: var(--shadow-accent);
+    }
+
+    .header-logo .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.3px;
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-balance {
+      text-align: right;
+    }
+
+    .header-balance .balance-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-balance .balance-amount {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+
+    .header-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      border: 2px solid rgba(135, 116, 225, 0.3);
+      overflow: hidden;
+    }
+
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ==========================================
+       🧭 СОДЕРЖИМОЕ ТАБОВ
+       ========================================== */
+    .tab-content {
+      display: none;
+      padding: 16px 16px 24px;
+      animation: fadeSlideIn 0.35s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================
+       📦 СЕКЦИЯ
+       ========================================== */
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-secondary);
+      margin: 20px 0 12px 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* ==========================================
+       🃏 КАРТОЧКИ ТОВАРОВ
+       ========================================== */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(var(--card-blur));
+      -webkit-backdrop-filter: blur(var(--card-blur));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--secondary));
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .product-card:hover,
+    .product-card:active {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-accent);
+    }
+
+    .product-card:hover::before,
+    .product-card:active::before {
+      opacity: 1;
+    }
+
+    .product-card .card-emoji {
+      font-size: 28px;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 0 8px rgba(135, 116, 225, 0.3));
+    }
+
+    .product-card .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .product-card .card-price {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--accent-light);
+      letter-spacing: -0.5px;
+    }
+
+    .product-card .card-price-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Карточка услуги — полная ширина */
+    .service-card {
+      grid-column: span 2;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+    }
+
+    .service-card .card-emoji {
+      font-size: 32px;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
+    .service-card .service-info {
+      flex: 1;
+    }
+
+    .service-card .service-info .card-title {
+      margin-bottom: 2px;
+    }
+
+    .service-card .service-info .card-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .service-card .service-arrow {
+      color: var(--text-muted);
+      font-size: 18px;
+      transition: transform var(--transition);
+    }
+
+    .service-card:hover .service-arrow,
+    .service-card:active .service-arrow {
+      transform: translateX(4px);
+      color: var(--accent);
+    }
+
+    /* ==========================================
+       🏷️ BADGE — популярный / скидка
+       ========================================== */
+    .badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--accent), #6C5CE7);
+      color: white;
+    }
+
+    .badge.hot {
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+    }
+
+    /* ==========================================
+       👤 ПРОФИЛЬ
+       ========================================== */
+    .profile-header {
+      text-align: center;
+      padding: 20px 0 16px;
+    }
+
+    .profile-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      box-shadow: 0 0 30px rgba(135, 116, 225, 0.2);
+      border: 3px solid rgba(135, 116, 225, 0.2);
+      overflow: hidden;
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-username {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .profile-id {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .profile-stats {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    .profile-stat {
+      text-align: center;
+    }
+
+    .profile-stat .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent-light);
+    }
+
+    .profile-stat .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Блоки профиля */
+    .profile-block {
+      background: var(--bg-card);
+      backdrop-filter: blur(var(--card-blur));
+      -webkit-backdrop-filter: blur(var(--card-blur));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .profile-block-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .balance-big {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--secondary), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      margin: 8px 0;
+    }
+
+    /* Кнопки */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      color: white;
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), #6C5CE7);
+      box-shadow: 0 4px 15px rgba(135, 116, 225, 0.3);
+    }
+
+    .btn-accent:hover, .btn-accent:active {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(135, 116, 225, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(49, 180, 180, 0.15);
+      color: var(--secondary);
+      border: 1px solid rgba(49, 180, 180, 0.2);
+    }
+
+    .btn-secondary:hover, .btn-secondary:active {
+      background: rgba(49, 180, 180, 0.25);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover, .btn-ghost:active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    .btn-sm {
+      padding: 10px 16px;
+      font-size: 13px;
+    }
+
+    /* Ключи в профиле */
+    .key-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .key-item:last-child { border-bottom: none; }
+
+    .key-info .key-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .key-info .key-date {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .key-timer {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .key-timer.active {
+      background: rgba(76, 175, 80, 0.15);
+      color: var(--success);
+    }
+
+    .key-timer.expired {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    /* Купоны */
+    .coupon-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .coupon-item:last-child { border-bottom: none; }
+
+    .coupon-code {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-light);
+      padding: 4px 10px;
+      background: rgba(135, 116, 225, 0.1);
+      border-radius: 6px;
+      border: 1px dashed rgba(135, 116, 225, 0.3);
+    }
+
+    .coupon-discount {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .copy-toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ==========================================
+       🧭 НИЖНЯЯ НАВИГАЦИЯ
+       ========================================== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      height: 65px;
+      background: rgba(14, 17, 23, 0.9);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-top: 1px solid var(--border);
+      z-index: 200;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all var(--transition);
+      color: var(--text-muted);
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 30%;
+      right: 30%;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 0 0 2px 2px;
+    }
+
+    .nav-item .nav-icon {
+      font-size: 22px;
+      transition: transform var(--transition);
+    }
+
+    .nav-item.active .nav-icon {
+      transform: scale(1.1);
+    }
+
+    .nav-item .nav-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* ==========================================
+       🔲 МОДАЛЬНЫЕ ОКНА
+       ========================================== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg-modal);
+      z-index: 500;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: 0;
+      overflow-y: auto;
+      animation: slideUp 0.35s cubic-bezier(.4, 0, .2, 1);
+      border-top: 1px solid var(--border);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+
+    .modal-header {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 0 20px 24px;
+    }
+
+    /* Опции в модальном окне */
+    .currency-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .currency-option:hover, .currency-option:active {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .currency-option.selected {
+      border-color: var(--accent);
+      background: rgba(135, 116, 225, 0.08);
+    }
+
+    .currency-flag {
+      font-size: 22px;
+      margin-right: 12px;
+    }
+
+    .currency-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .currency-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-light);
+    }
+
+    /* Методы оплаты */
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .payment-method:hover, .payment-method:active {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .payment-method .pm-icon {
+      font-size: 24px;
+      width: 36px;
+      text-align: center;
+    }
+
+    .payment-method .pm-name {
+      font-weight: 600;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .payment-method .pm-arrow {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    /* Topup input */
+    .topup-input-wrap {
+      position: relative;
+      margin: 16px 0;
+    }
+
+    .topup-input {
+      width: 100%;
+      padding: 16px 60px 16px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 20px;
+      font-weight: 700;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .topup-input:focus {
+      border-color: var(--accent);
+    }
+
+    .topup-input-currency {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Loader */
+    .loader-wrap {
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .loader {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-text {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Пустое состояние */
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .empty-state .empty-emoji {
+      font-size: 40px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+
+    /* Утилиты */
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .gap-8 { gap: 8px; }
+    .flex-row { display: flex; }
+    .text-center { text-align: center; }
+
+    /* Приветствие в шапке */
+    .header-greeting {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 1px;
+    }
+    .header-greeting span {
+      color: var(--accent-light);
+      font-weight: 600;
+    }
+    .header-balance {
+      text-align: right;
+      cursor: pointer;
+      transition: opacity var(--transition);
+    }
+    .header-balance:active { opacity: 0.7; }
+
+    /* Оверлей подтверждения действия */
+    .action-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 12, 16, 0.92);
+      z-index: 600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .action-overlay.active { display: flex; }
+    .action-content {
+      text-align: center;
+      padding: 32px;
+      animation: fadeSlideIn 0.4s ease;
+    }
+    .action-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+      animation: pulseGlow 1.5s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(135,116,225,0.3)); transform: scale(1); }
+      50% { filter: drop-shadow(0 0 20px rgba(135,116,225,0.6)); transform: scale(1.1); }
+    }
+    .action-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .action-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Плавное появление карточек с задержкой */
+    .product-card { animation: cardAppear 0.4s ease both; }
+    .product-card:nth-child(1) { animation-delay: 0.05s; }
+    .product-card:nth-child(2) { animation-delay: 0.10s; }
+    .product-card:nth-child(3) { animation-delay: 0.15s; }
+    .product-card:nth-child(4) { animation-delay: 0.20s; }
+    .product-card:nth-child(5) { animation-delay: 0.25s; }
+    .product-card:nth-child(6) { animation-delay: 0.30s; }
+
+    @keyframes cardAppear {
+      from { opacity: 0; transform: translateY(16px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Confirm summary */
+    .confirm-summary {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .confirm-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+
+    .confirm-row .cr-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .confirm-row .cr-value {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .confirm-total {
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+      padding-top: 10px;
+    }
+
+    .confirm-total .cr-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--accent-light);
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       📱 HEADER
+       ========================================== -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <span class="logo-text">CyraxMods</span>
+        <div class="header-greeting" id="headerGreeting">👋 Привет!</div>
+      </div>
+    </div>
+    <div class="header-user">
+      <div class="header-balance" id="headerBalance" onclick="switchTab('tabProfile')">
+        <div class="balance-label">Баланс</div>
+        <div class="balance-amount" id="headerBalanceAmount">0 ₽</div>
+      </div>
+      <div class="header-avatar" id="headerAvatar">
+        <span id="headerAvatarLetter">?</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       🛒 ТАБ: МАГАЗИН
+       ========================================== -->
+  <div class="tab-content active" id="tabShop">
+    <!-- Секция Ключи -->
+    <div class="section-title">🔑 Ключи</div>
+    <div class="cards-grid" id="keysGrid">
+      <!-- Генерируется в JS -->
+    </div>
+
+    <!-- Секция Услуги -->
+    <div class="section-title" style="margin-top: 24px;">⚡ Услуги</div>
+    <div class="cards-grid" id="servicesGrid">
+      <!-- Генерируется в JS -->
+    </div>
+  </div>
+
+  <!-- ==========================================
+       👤 ТАБ: ПРОФИЛЬ
+       ========================================== -->
+  <div class="tab-content" id="tabProfile">
+    <div id="profileContent">
+      <div class="loader-wrap">
+        <div class="loader"></div>
+        <div class="loader-text">Загрузка профиля...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       🧭 НИЖНЯЯ НАВИГАЦИЯ
+       ========================================== -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-tab="tabShop" onclick="switchTab('tabShop')">
+      <span class="nav-icon">🛒</span>
+      <span class="nav-label">Магазин</span>
+    </div>
+    <div class="nav-item" data-tab="tabProfile" onclick="switchTab('tabProfile')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Профиль</span>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       🔲 МОДАЛЬНОЕ ОКНО — Выбор валюты
+       ========================================== -->
+  <div class="modal-overlay" id="modalCurrency">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title" id="currencyModalTitle">Выберите валюту</div>
+        <button class="modal-close" onclick="closeModal('modalCurrency')">✕</button>
+      </div>
+      <div class="modal-body" id="currencyModalBody">
+        <!-- Генерируется в JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       🔲 МОДАЛЬНОЕ ОКНО — Выбор метода оплаты
+       ========================================== -->
+  <div class="modal-overlay" id="modalPayment">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Способ оплаты</div>
+        <button class="modal-close" onclick="closeModal('modalPayment')">✕</button>
+      </div>
+      <div class="modal-body" id="paymentModalBody">
+        <!-- Генерируется в JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       🔲 МОДАЛЬНОЕ ОКНО — Пополнение баланса
+       ========================================== -->
+  <div class="modal-overlay" id="modalTopup">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">💳 Пополнение баланса</div>
+        <button class="modal-close" onclick="closeModal('modalTopup')">✕</button>
+      </div>
+      <div class="modal-body" id="topupModalBody">
+        <!-- Генерируется в JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast для копирования -->
+  <div class="copy-toast" id="copyToast">✅ Скопировано!</div>
+
+  <!-- Оверлей подтверждения действия -->
+  <div class="action-overlay" id="actionOverlay">
+    <div class="action-content">
+      <div class="action-icon" id="actionIcon">✅</div>
+      <div class="action-title" id="actionTitle">Запрос отправлен!</div>
+      <div class="action-subtitle" id="actionSubtitle">Проверьте Telegram для дальнейших действий</div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       ⚙️ JAVASCRIPT — Логика WebApp
+       ========================================== -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ==========================================
+    // 🔧 КОНФИГУРАЦИЯ
+    // ==========================================
+
+    // Цены задаются прямо здесь — зеркало PRICES из index.js бота.
+    // При изменении цен в боте нужно обновить и здесь.
+    const PRICES = {
+      '1d':  { USD: 1.50, EUR: 1.25, RUB: 100,  UAH: 65 },
+      '3d':  { USD: 4.10, EUR: 3.65, RUB: 280,  UAH: 180 },
+      '7d':  { USD: 6.30, EUR: 5.50, RUB: 450,  UAH: 285 },
+      '30d': { USD: 21.0, EUR: 19.0, RUB: 1500, UAH: 955 },
+    };
+
+    const PERIOD_NAMES = {
+      '1d': '1 День',
+      '3d': '3 Дня',
+      '7d': '7 Дней',
+      '30d': '30 Дней',
+    };
+
+    const PERIOD_EMOJI = {
+      '1d': '🔑',
+      '3d': '🔑',
+      '7d': '🔑',
+      '30d': '🔑',
+    };
+
+    const CURRENCY_FLAGS = { USD: '🇺🇸', EUR: '🇪🇺', RUB: '🇷🇺', UAH: '🇺🇦' };
+    const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', RUB: '₽', UAH: '₴' };
+    const CURRENCIES = ['USD', 'EUR', 'RUB', 'UAH'];
+
+    // Методы оплаты, доступные для каждой валюты
+    const PAYMENT_METHODS = {
+      USD: [
+        { id: 'paypal',    name: 'PayPal',      icon: '💰' },
+        { id: 'binance',   name: 'Binance P2P', icon: '💎' },
+        { id: 'cryptobot', name: 'CryptoBot',   icon: '₿' },
+      ],
+      EUR: [
+        { id: 'card_it',   name: 'Карта — Италия',  icon: '🇮🇹' },
+        { id: 'binance',   name: 'Binance P2P',     icon: '💎' },
+        { id: 'cryptobot', name: 'CryptoBot',       icon: '₿' },
+        { id: 'paypal',    name: 'PayPal',           icon: '💰' },
+      ],
+      RUB: [
+        { id: 'sbp',           name: 'СБП (Россия)', icon: '🇷🇺' },
+        { id: 'cryptobot_usd', name: 'CryptoBot',    icon: '₿' },
+      ],
+      UAH: [
+        { id: 'card_ua',       name: 'Карта — Украина', icon: '🇺🇦' },
+        { id: 'cryptobot_usd', name: 'CryptoBot',       icon: '₿' },
+      ],
+    };
+
+    // ==========================================
+    // 📊 СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+    // ==========================================
+    let currentUser = null; // Telegram user
+    let userProfile = null; // Данные из бота (баланс, ключи, купоны)
+    let selectedPeriod = null;
+    let selectedCurrency = null;
+
+    // Определяем базовый URL API
+    const API_BASE = window.location.origin;
+
+    // ==========================================
+    // 🚀 ИНИЦИАЛИЗАЦИЯ
+    // ==========================================
+    const tg = window.Telegram?.WebApp;
+
+    function init() {
+      // Инициализируем Telegram WebApp
+      if (tg) {
+        tg.ready();
+        tg.expand(); // Раскрываем на весь экран
+        tg.enableClosingConfirmation(); // Подтверждение закрытия
+
+        // Устанавливаем тему
+        document.documentElement.style.setProperty('--tg-theme-bg', tg.themeParams?.bg_color || '#0A0C10');
+
+        currentUser = tg.initDataUnsafe?.user || null;
+      }
+
+      // Для тестирования в браузере без Telegram — реалистичная заглушка
+      if (!currentUser) {
+        currentUser = {
+          id: 987654321,
+          first_name: 'Vlad',
+          last_name: '',
+          username: 'cyraxx_player',
+          language_code: 'ru',
+        };
+      }
+
+      // Устанавливаем аватар
+      setupHeader();
+
+      // Рендерим магазин
+      renderShop();
+
+      // Загружаем профиль
+      loadUserProfile();
+    }
+
+    // ==========================================
+    // 📱 HEADER
+    // ==========================================
+    function setupHeader() {
+      const avatarEl = document.getElementById('headerAvatar');
+      const letterEl = document.getElementById('headerAvatarLetter');
+      const greetingEl = document.getElementById('headerGreeting');
+
+      if (currentUser) {
+        const firstChar = (currentUser.first_name || currentUser.username || '?')[0].toUpperCase();
+        letterEl.textContent = firstChar;
+
+        // Приветствие с username
+        const displayName = currentUser.username ? `@${currentUser.username}` : currentUser.first_name;
+        greetingEl.innerHTML = `👋 Привет, <span>${escapeHtml(displayName)}</span>!`;
+
+        // Фото пользователя
+        if (currentUser.photo_url) {
+          avatarEl.innerHTML = `<img src="${currentUser.photo_url}" alt="avatar">`;
+        }
+      }
+
+      // Показываем баланс сразу (заглушка, обновится с API)
+      updateHeaderBalance(0, 'RUB');
+    }
+
+    function updateHeaderBalance(balance, currency) {
+      const el = document.getElementById('headerBalance');
+      const amountEl = document.getElementById('headerBalanceAmount');
+      el.style.display = 'block';
+      amountEl.textContent = formatPrice(balance, currency);
+    }
+
+    // Оверлей подтверждения действия
+    function showActionOverlay(icon, title, subtitle) {
+      document.getElementById('actionIcon').textContent = icon;
+      document.getElementById('actionTitle').textContent = title;
+      document.getElementById('actionSubtitle').textContent = subtitle;
+      document.getElementById('actionOverlay').classList.add('active');
+      // Haptic
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      // Автозакрытие через 2.5 секунды
+      setTimeout(() => {
+        document.getElementById('actionOverlay').classList.remove('active');
+      }, 2500);
+    }
+
+    // ==========================================
+    // 🛒 РЕНДЕР МАГАЗИНА
+    // ==========================================
+    function renderShop() {
+      const keysGrid = document.getElementById('keysGrid');
+      const servicesGrid = document.getElementById('servicesGrid');
+
+      // Карточки ключей
+      const periods = ['1d', '3d', '7d', '30d'];
+      const badges = { '7d': 'ХИТ', '30d': '-15%' };
+      const badgeClasses = { '7d': 'hot', '30d': '' };
+
+      keysGrid.innerHTML = periods.map(p => {
+        const badge = badges[p]
+          ? `<div class="badge ${badgeClasses[p] || ''}">${badges[p]}</div>`
+          : '';
+        return `
+          <div class="product-card" onclick="openCurrencyModal('${p}')">
+            ${badge}
+            <div class="card-emoji">${PERIOD_EMOJI[p]}</div>
+            <div class="card-title">${PERIOD_NAMES[p]}</div>
+            <div class="card-price">${formatPrice(PRICES[p].RUB, 'RUB')}</div>
+            <div class="card-price-sub">от ${formatPrice(PRICES[p].USD, 'USD')}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Карточки услуг
+      servicesGrid.innerHTML = `
+        <div class="product-card service-card" onclick="sendAction('navigate', { page: 'buy_boost' })">
+          <div class="card-emoji">📈</div>
+          <div class="service-info">
+            <div class="card-title">Метод Буста</div>
+            <div class="card-desc">Инструкция + поддержка 24/7 для самостоятельного буста</div>
+          </div>
+          <div class="service-arrow">›</div>
+        </div>
+        <div class="product-card service-card" onclick="sendAction('navigate', { page: 'manual_boost_start' })">
+          <div class="card-emoji">🏆</div>
+          <div class="service-info">
+            <div class="card-title">Ручной Буст</div>
+            <div class="card-desc">Буст аккаунта нашими специалистами</div>
+          </div>
+          <div class="service-arrow">›</div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 💱 МОДАЛЬНОЕ ОКНО — Выбор валюты
+    // ==========================================
+    window.openCurrencyModal = function(period) {
+      selectedPeriod = period;
+      selectedCurrency = null;
+
+      const title = document.getElementById('currencyModalTitle');
+      title.textContent = `${PERIOD_NAMES[period]} — валюта`;
+
+      const body = document.getElementById('currencyModalBody');
+      body.innerHTML = CURRENCIES.map(cur => `
+        <div class="currency-option" onclick="selectCurrency('${cur}')">
+          <div style="display:flex;align-items:center;">
+            <span class="currency-flag">${CURRENCY_FLAGS[cur]}</span>
+            <span class="currency-name">${cur}</span>
+          </div>
+          <span class="currency-price">${formatPrice(PRICES[period][cur], cur)}</span>
+        </div>
+      `).join('');
+
+      openModal('modalCurrency');
+    };
+
+    window.selectCurrency = function(currency) {
+      selectedCurrency = currency;
+      closeModal('modalCurrency');
+
+      // Открываем окно выбора метода оплаты
+      setTimeout(() => openPaymentModal(), 200);
+    };
+
+    // ==========================================
+    // 💳 МОДАЛЬНОЕ ОКНО — Способ оплаты
+    // ==========================================
+    function openPaymentModal() {
+      if (!selectedPeriod || !selectedCurrency) return;
+
+      const methods = PAYMENT_METHODS[selectedCurrency] || [];
+      const body = document.getElementById('paymentModalBody');
+
+      const price = PRICES[selectedPeriod][selectedCurrency];
+      const priceStr = formatPrice(price, selectedCurrency);
+
+      body.innerHTML = `
+        <div class="confirm-summary">
+          <div class="confirm-row">
+            <span class="cr-label">Товар</span>
+            <span class="cr-value">${PERIOD_EMOJI[selectedPeriod]} ${PERIOD_NAMES[selectedPeriod]}</span>
+          </div>
+          <div class="confirm-row confirm-total">
+            <span class="cr-label">К оплате</span>
+            <span class="cr-value">${priceStr}</span>
+          </div>
+        </div>
+        ${methods.map(m => `
+          <div class="payment-method" onclick="confirmPurchase('${m.id}')">
+            <span class="pm-icon">${m.icon}</span>
+            <span class="pm-name">${m.name}</span>
+            <span class="pm-arrow">›</span>
+          </div>
+        `).join('')}
+      `;
+
+      openModal('modalPayment');
+    }
+
+    // ==========================================
+    // ✅ ПОДТВЕРЖДЕНИЕ ПОКУПКИ — sendData
+    // ==========================================
+    window.confirmPurchase = function(method) {
+      closeModal('modalPayment');
+
+      const data = {
+        action: 'pay',
+        product: selectedPeriod,
+        currency: selectedCurrency,
+        method: method,
+      };
+
+      // Показываем подтверждение перед отправкой
+      showActionOverlay(
+        '💳',
+        'Платёж инициирован!',
+        `${PERIOD_NAMES[selectedPeriod]} • ${formatPrice(PRICES[selectedPeriod][selectedCurrency], selectedCurrency)}\nПроверьте Telegram для оплаты`
+      );
+
+      // Отправляем данные боту с небольшой задержкой (чтобы пользователь увидел оверлей)
+      setTimeout(() => sendDataToBot(data), 800);
+    };
+
+    // ==========================================
+    // 👤 ПРОФИЛЬ
+    // ==========================================
+    async function loadUserProfile() {
+      if (!currentUser) return;
+
+      // Реалистичные заглушки для тестирования (когда API недоступен)
+      const MOCK_PROFILE = {
+        balance: 1500,
+        preferred_currency: 'RUB',
+        total_purchases: 7,
+        total_spent: 3200,
+        joined_at: '2025-11-15T10:30:00Z',
+        keys: [
+          { product: '7d', confirmed_at: new Date(Date.now() - 2*86400000).toISOString(), expires_at: new Date(Date.now() + 5*86400000).toISOString(), key_issued: 'CRX-A7F2-K9D1' },
+          { product: '30d', confirmed_at: new Date(Date.now() - 20*86400000).toISOString(), expires_at: new Date(Date.now() + 10*86400000).toISOString(), key_issued: 'CRX-B3E8-M4P7' },
+          { product: '3d', confirmed_at: new Date(Date.now() - 35*86400000).toISOString(), expires_at: new Date(Date.now() - 32*86400000).toISOString(), key_issued: 'CRX-Z1X9-N6Q2' },
+        ],
+        coupons: [
+          { code: 'LOYAL10', discount: 10 },
+        ],
+      };
+
+      try {
+        const resp = await fetch(`${API_BASE}/api/user/${currentUser.id}`);
+        if (resp.ok) {
+          userProfile = await resp.json();
+          // Если API вернул пустые данные (БД не подключена) — используем моки
+          if (!userProfile.joined_at && userProfile.total_purchases === 0) {
+            userProfile = MOCK_PROFILE;
+          }
+        } else {
+          userProfile = MOCK_PROFILE;
+        }
+      } catch (e) {
+        userProfile = MOCK_PROFILE;
+      }
+
+      renderProfile();
+      updateHeaderBalance(userProfile.balance || 0, userProfile.preferred_currency || 'RUB');
+    }
+
+    function renderProfile() {
+      const container = document.getElementById('profileContent');
+      const u = currentUser;
+      const p = userProfile;
+      const cur = p.preferred_currency || 'RUB';
+
+      const firstChar = (u.first_name || u.username || '?')[0].toUpperCase();
+      const username = u.username ? `@${u.username}` : (u.first_name || 'Пользователь');
+      const joinDate = p.joined_at
+        ? new Date(p.joined_at).toLocaleDateString('ru-RU')
+        : '—';
+
+      // Ключи
+      let keysHtml = '';
+      if (p.keys && p.keys.length > 0) {
+        keysHtml = p.keys.slice(0, 3).map(k => {
+          const name = PERIOD_NAMES[k.product] || k.product;
+          const date = k.confirmed_at
+            ? new Date(k.confirmed_at).toLocaleDateString('ru-RU')
+            : '';
+          let timerClass = 'expired';
+          let timerText = '✅ истёк';
+          if (k.expires_at) {
+            const diff = new Date(k.expires_at) - Date.now();
+            if (diff > 0) {
+              timerClass = 'active';
+              const d = Math.floor(diff / 86400000);
+              const h = Math.floor((diff % 86400000) / 3600000);
+              timerText = d > 0 ? `${d}д ${h}ч` : `${h}ч`;
+            }
+          }
+          return `
+            <div class="key-item">
+              <div class="key-info">
+                <div class="key-name">🔑 ${name}</div>
+                <div class="key-date">${date}</div>
+              </div>
+              <div class="key-timer ${timerClass}">${timerText}</div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        keysHtml = `<div class="empty-state"><div class="empty-emoji">📂</div>Пока нет купленных ключей</div>`;
+      }
+
+      // Купоны
+      let couponsHtml = '';
+      if (p.coupons && p.coupons.length > 0) {
+        couponsHtml = p.coupons.map(c => `
+          <div class="coupon-item" onclick="copyCoupon('${c.code}')">
+            <span class="coupon-code">${c.code}</span>
+            <span class="coupon-discount">-${c.discount}%</span>
+          </div>
+        `).join('');
+      } else {
+        couponsHtml = `<div class="empty-state"><div class="empty-emoji">🎟️</div>Нет активных купонов</div>`;
+      }
+
+      container.innerHTML = `
+        <!-- Шапка профиля -->
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <span>${firstChar}</span>
+          </div>
+          <div class="profile-username">${escapeHtml(u.first_name || '')} ${escapeHtml(u.last_name || '')}</div>
+          <div class="profile-id">${username} • ID: ${u.id}</div>
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <div class="stat-value">${p.total_purchases || 0}</div>
+              <div class="stat-label">Покупок</div>
+            </div>
+            <div class="profile-stat">
+              <div class="stat-value">${joinDate}</div>
+              <div class="stat-label">В боте с</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Баланс -->
+        <div class="profile-block">
+          <div class="profile-block-title">💳 Баланс</div>
+          <div class="balance-big">${formatPrice(p.balance || 0, cur)}</div>
+          <button class="btn btn-accent" onclick="openTopupModal()">
+            💳 Пополнить
+          </button>
+        </div>
+
+        <!-- Мои ключи -->
+        <div class="profile-block">
+          <div class="profile-block-title">🔑 Мои ключи</div>
+          ${keysHtml}
+          <button class="btn btn-ghost btn-sm mt-12" onclick="sendAction('navigate', { page: 'orders' })">
+            📂 Все ключи
+          </button>
+        </div>
+
+        <!-- Мои купоны -->
+        <div class="profile-block">
+          <div class="profile-block-title">🎟️ Мои купоны</div>
+          ${couponsHtml}
+        </div>
+
+        <!-- Партнёрство -->
+        <button class="btn btn-secondary mt-8" onclick="sendAction('navigate', { page: 'partnership' })">
+          🤝 Партнёрство
+        </button>
+
+        <!-- Реферальная программа -->
+        <button class="btn btn-ghost mt-8" onclick="sendAction('navigate', { page: 'my_ref' })">
+          🎁 Реферальная программа
+        </button>
+      `;
+    }
+
+    // ==========================================
+    // 💳 ПОПОЛНЕНИЕ БАЛАНСА
+    // ==========================================
+    window.openTopupModal = function() {
+      const cur = userProfile?.preferred_currency || 'RUB';
+      const methods = PAYMENT_METHODS[cur] || PAYMENT_METHODS['RUB'];
+      const minAmounts = { RUB: 100, USD: 1.5, EUR: 1.5, UAH: 65 };
+      const minAmt = minAmounts[cur] || 1;
+
+      const body = document.getElementById('topupModalBody');
+      body.innerHTML = `
+        <div class="topup-input-wrap">
+          <input type="number" class="topup-input" id="topupAmountInput"
+                 placeholder="${minAmt}" min="${minAmt}" step="1"
+                 inputmode="decimal">
+          <span class="topup-input-currency">${CURRENCY_SYMBOLS[cur] || cur}</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+          Минимум: ${formatPrice(minAmt, cur)}
+        </p>
+        <div id="topupMethodsList">
+          ${methods.map(m => `
+            <div class="payment-method" onclick="confirmTopup('${m.id}', '${cur}')">
+              <span class="pm-icon">${m.icon}</span>
+              <span class="pm-name">${m.name}</span>
+              <span class="pm-arrow">›</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      openModal('modalTopup');
+
+      // Автофокус на поле ввода
+      setTimeout(() => {
+        document.getElementById('topupAmountInput')?.focus();
+      }, 400);
+    };
+
+    window.confirmTopup = function(method, currency) {
+      const input = document.getElementById('topupAmountInput');
+      const amount = parseFloat(input?.value);
+      const minAmounts = { RUB: 100, USD: 1.5, EUR: 1.5, UAH: 65 };
+      const minAmt = minAmounts[currency] || 1;
+
+      if (!amount || amount < minAmt) {
+        input.style.borderColor = 'var(--danger)';
+        setTimeout(() => { input.style.borderColor = ''; }, 1500);
+        // Haptic feedback
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        return;
+      }
+
+      const data = {
+        action: 'profile_topup',
+        amount: amount,
+        currency: currency,
+        method: method,
+      };
+
+      closeModal('modalTopup');
+      showActionOverlay(
+        '💳',
+        'Пополнение отправлено!',
+        `${formatPrice(amount, currency)} \u2022 Проверьте Telegram`
+      );
+
+      setTimeout(() => sendDataToBot(data), 800);
+    };
+
+    // ==========================================
+    // 📋 КОПИРОВАНИЕ КУПОНА
+    // ==========================================
+    window.copyCoupon = function(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        showToast('✅ Купон скопирован!');
+      }).catch(() => {
+        showToast('📋 ' + code);
+      });
+    };
+
+    function showToast(text) {
+      const toast = document.getElementById('copyToast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ==========================================
+    // 🧭 НАВИГАЦИЯ ТАБОВ
+    // ==========================================
+    window.switchTab = function(tabId) {
+      // Деактивируем все
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      // Активируем нужный
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
+
+      // Haptic
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+      // При переключении на профиль — перезагружаем данные
+      if (tabId === 'tabProfile' && currentUser) {
+        loadUserProfile();
+      }
+    };
+
+    // ==========================================
+    // 🔲 МОДАЛЬНЫЕ ОКНА
+    // ==========================================
+    window.openModal = function(id) {
+      const el = document.getElementById(id);
+      el.classList.add('active');
+      // Haptic
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    };
+
+    window.closeModal = function(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('active');
+    };
+
+    // Закрытие по клику на overlay
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('active');
+        }
+      });
+    });
+
+    // ==========================================
+    // 📤 ОТПРАВКА ДАННЫХ В БОТ
+    // ==========================================
+    function sendDataToBot(data) {
+      console.log('📤 sendData:', JSON.stringify(data));
+
+      if (tg?.sendData) {
+        tg.sendData(JSON.stringify(data));
+      } else {
+        // Для тестирования в браузере — логируем в консоль (оверлей уже показан)
+        console.log('🧪 [Тест] Данные для бота:', data);
+      }
+    }
+
+    // Утилита для навигационных действий и услуг
+    window.sendAction = function(action, extra) {
+      const data = { action, ...extra };
+
+      // Показываем подтверждение для услуг
+      if (extra?.page === 'buy_boost' || extra?.page === 'manual_boost_start') {
+        showActionOverlay('🚀', 'Запрос отправлен!', 'Откройте Telegram для продолжения');
+        setTimeout(() => sendDataToBot(data), 800);
+      } else {
+        showActionOverlay('✅', 'Переходим...', 'Откройте Telegram');
+        setTimeout(() => sendDataToBot(data), 600);
+      }
+    };
+
+    // ==========================================
+    // 🛠 ХЕЛПЕРЫ
+    // ==========================================
+    function formatPrice(amount, currency) {
+      if (currency === 'RUB') {
+        return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
+      }
+      if (currency === 'UAH') return amount + ' ₴';
+      if (currency === 'USD') return '$' + amount;
+      if (currency === 'EUR') return '€' + amount;
+      return amount + ' ' + currency;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==========================================
+    // 🎬 ЗАПУСК
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', init);
+
+  })();
+  </script>
+</body>
+</html>
