@@ -20429,8 +20429,7 @@ app.get('/api/payment-methods', (req, res) => {
 
 app.get('/api/payment-details/:method', (req, res) => {
   const method = req.params.method;
-  const mappedMethod = method === 'cryptobot' ? 'crypto' : method;
-  res.json({ details: PAYMENT_DETAILS[mappedMethod] || '' });
+  res.json({ details: PAYMENT_DETAILS[method] || '' });
 });
 
 app.get('/api/order-status/:orderId', (req, res) => {
@@ -20448,7 +20447,7 @@ app.post('/api/site/create-order', (req, res) => {
   if (!price) return res.status(400).json({ error: 'Invalid product or currency' });
 
   db.run(
-    `INSERT INTO orders (user_id, product, amount, currency, payment_method, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+    `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
     [parseInt(telegram_id), product, price, currency, method],
     function(err) {
       if (err) return res.status(500).json({ error: 'DB Error' });
