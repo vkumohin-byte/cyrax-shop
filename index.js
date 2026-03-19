@@ -20441,17 +20441,27 @@ app.get('/api/order-status/:orderId', (req, res) => {
 });
 
 app.post('/api/site/create-order', (req, res) => {
-  const { telegram_id, product, currency, method } = req.body;
-  if (!telegram_id || !product || !currency || !method) return res.status(400).json({ error: 'Missing params' });
+  const { telegram_username, product, currency, method } = req.body;
+  if (!telegram_username || !product || !currency || !method) return res.status(400).json({ error: 'Missing params' });
   const price = PRICES[product]?.[currency];
   if (!price) return res.status(400).json({ error: 'Invalid product or currency' });
 
-  db.run(
-    `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
-    [parseInt(telegram_id), product, price, currency, method],
-    function(err) {
-      if (err) return res.status(500).json({ error: 'DB Error' });
-      const orderId = this.lastID;
+  const cleanUsername = telegram_username.replace('@', '').trim();
+
+  db.get('SELECT id FROM users WHERE username = ? COLLATE NOCASE', [cleanUsername], (err, userRow) => {
+    if (err) return res.status(500).json({ error: 'DB Error' });
+    if (!userRow) {
+      return res.status(400).json({ error: 'Пользователь не найден! Вы не запустили бота @cyraxxmod_bot. Нажмите СТАРТ в боте и повторите попытку.' });
+    }
+
+    const telegram_id = userRow.id;
+
+    db.run(
+      `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+      [parseInt(telegram_id), product, price, currency, method],
+      function(err) {
+        if (err) return res.status(500).json({ error: 'DB Error' });
+        const orderId = this.lastID;
       
       const userMsg = `✅ *Заказ #${orderId} создан!*\n\n🔑 Товар: ${product}\n💰 Сумма: ${price} ${currency}\n💳 Метод: ${method}\n\n⚠️ После оплаты отправьте скриншот чека в этот чат (если оплата ручная) или ожидайте проверки.`;
       bot.sendMessage(telegram_id, userMsg, {
@@ -20466,6 +20476,7 @@ app.post('/api/site/create-order', (req, res) => {
       res.json({ success: true, orderId });
     }
   );
+  });
 });
 
 // ==========================================

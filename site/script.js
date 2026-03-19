@@ -162,14 +162,24 @@ async function selectMethod(method, btnElement) {
     const data = await res.json();
     
     let instructions = '';
-    if (method === 'cryptobot') {
+    if (method === 'cryptobot' || method === 'crypto') {
       instructions = '<p>🤖 <b>Оплата через CryptoBot</b></p><p>Инвойс будет создан и отправлен вам в Telegram после нажатия "Я оплатил".</p>';
     } else {
-      instructions = `
-        <p>Реквизиты для оплаты (${METHOD_NAMES[method]}):</p>
-        <pre>${data.details}</pre>
-        <p>⚠️ Переведите точную сумму и <b>обязательно сохраните чек</b>. После оплаты нажмите кнопку ниже.</p>
-      `;
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      if (urlRegex.test(data.details)) {
+        const htmlDetails = data.details.replace(urlRegex, '<a href="$1" target="_blank" class="btn" style="display:block; margin: 15px 0; text-align:center;">🔗 Оплатить по ссылке</a>');
+        instructions = `
+          <p>Реквизиты для оплаты (${METHOD_NAMES[method]}):</p>
+          <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius:8px; margin: 10px 0; word-wrap: break-word;">${htmlDetails}</div>
+          <p>⚠️ Переведите точную сумму и <b>обязательно сохраните чек</b>. После оплаты нажмите кнопку ниже.</p>
+        `;
+      } else {
+        instructions = `
+          <p>Реквизиты для оплаты (${METHOD_NAMES[method]}):</p>
+          <pre>${data.details}</pre>
+          <p>⚠️ Переведите точную сумму и <b>обязательно сохраните чек</b>. После оплаты нажмите кнопку ниже.</p>
+        `;
+      }
     }
     
     paymentDetails.innerHTML = instructions;
@@ -183,8 +193,8 @@ async function createOrder() {
   const telegramIdInput = document.getElementById('telegram-id').value;
   const errorMsg = document.getElementById('error-message');
   
-  if (!telegramIdInput || telegramIdInput.length < 5) {
-    errorMsg.innerText = 'Пожалуйста, введите корректный Telegram ID';
+  if (!telegramIdInput || telegramIdInput.length < 3) {
+    errorMsg.innerText = 'Пожалуйста, введите корректный Telegram Никнейм';
     errorMsg.classList.remove('hidden');
     return;
   }
@@ -201,7 +211,7 @@ async function createOrder() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        telegram_id: checkoutState.telegramId,
+        telegram_username: telegramIdInput,
         product: checkoutState.product,
         currency: checkoutState.currency,
         method: checkoutState.method
