@@ -20429,7 +20429,8 @@ app.get('/api/payment-methods', (req, res) => {
 
 app.get('/api/payment-details/:method', (req, res) => {
   const method = req.params.method;
-  res.json({ details: PAYMENT_DETAILS[method] || '' });
+  const mappedMethod = method === 'cryptobot' ? 'crypto' : method;
+  res.json({ details: PAYMENT_DETAILS[mappedMethod] || '' });
 });
 
 app.get('/api/order-status/:orderId', (req, res) => {
