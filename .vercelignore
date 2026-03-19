@@ -1,5 +1,9 @@
 .env
-shop.db
-shop.db-shm
-shop.db-wal
+shop.db*
 *.log
+index.js
+webapp-bot.js
+simple.js
+test.js
+node_modules
+webapp/
