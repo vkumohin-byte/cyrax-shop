@@ -6,6 +6,7 @@
     <title>CyraxMods - Premium Authorization</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <meta name="referrer" content="no-referrer-when-downgrade">
     <meta name="description" content="CyraxMods - Элитный магазин игровых ключей и профессионального буста. Безопасная оплата, мгновенная доставка и 24/7 поддержка.">
     <meta name="keywords" content="MLBB, CyraxMods, Ключи, Буст, Mobile Legends, Купить ключи">
     <meta property="og:title" content="CyraxMods — Премиальный магазин ключей">
@@ -52,25 +53,32 @@
         </section>
     </main>
 
-    <script src="script.js"></script>
     <script>
-        // Обработчик авторизации
+        // Глобальный обработчик (должен быть доступен Telegram скрипту)
         window.onTelegramAuth = function(user) {
-            console.log("Auth success:", user);
-            sessionStorage.setItem('tgUser', JSON.stringify(user));
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('enter-section').classList.remove('hidden');
-            document.getElementById('user-name-landing').innerText = `@${user.username || user.first_name}`;
+            console.log("Auth event received:", user);
+            if (user) {
+                sessionStorage.setItem('tgUser', JSON.stringify(user));
+                const loginSec = document.getElementById('login-section');
+                const enterSec = document.getElementById('enter-section');
+                const userName = document.getElementById('user-name-landing');
+                
+                if (loginSec) loginSec.classList.add('hidden');
+                if (enterSec) enterSec.classList.remove('hidden');
+                if (userName) userName.innerText = `@${user.username || user.first_name}`;
+                
+                // Авто-переход через 1 секунду
+                setTimeout(() => { window.location.href = 'shop.html'; }, 1000);
+            }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(sessionStorage.getItem('tgUser'));
             if (user) {
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('enter-section').classList.remove('hidden');
-                document.getElementById('user-name-landing').innerText = `@${user.username || user.first_name}`;
+                onTelegramAuth(user);
             }
         });
     </script>
+    <script src="script.js"></script>
 </body>
 </html>
