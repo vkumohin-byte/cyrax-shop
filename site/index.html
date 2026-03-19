@@ -258,12 +258,22 @@
                 _c = 0;
                 const pw = prompt('🔐 Admin access — enter password:');
                 if (!pw) return;
-                fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pw })
-                })
-                .then(r => r.json())
+                
+                const RENDER_URL = 'https://cyrax-bot-0vwr.onrender.com';
+                const attemptLogin = (url) => {
+                    return fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: pw })
+                    })
+                    .then(r => {
+                        if (r.status === 404 && url.startsWith('/api')) throw new Error('404');
+                        return r.json();
+                    });
+                };
+
+                attemptLogin('/api/admin/login')
+                .catch(() => attemptLogin(`${RENDER_URL}/api/admin/login`))
                 .then(data => {
                     if (data.success) {
                         localStorage.setItem('adminToken', 'true');

@@ -1,7 +1,23 @@
 // --- Константы и Настройки ---
-const API_BASE = window.location.origin.includes('localhost') 
-  ? 'http://localhost:5500/api' 
-  : '/api';
+const RENDER_URL = 'https://cyrax-bot-0vwr.onrender.com';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+
+async function apiFetch(endpoint, options = {}) {
+    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+    try {
+        const response = await fetch(url, options);
+        if (response.status === 404 && !endpoint.startsWith('http')) {
+            // Fallback to Render directly if proxy fails
+            return fetch(`${RENDER_URL}${endpoint}`, options).then(r => r.json());
+        }
+        return response.json();
+    } catch (e) {
+        if (!endpoint.startsWith('http')) {
+            return fetch(`${RENDER_URL}${endpoint}`, options).then(r => r.json());
+        }
+        throw e;
+    }
+}
 
 const METHOD_NAMES = {
   'cryptobot': 'CryptoBot ₿',
@@ -25,7 +41,7 @@ const PERIOD_NAMES = {
 // --- Глобальная защита и статус системы ---
 async function checkSystemStatus() {
   try {
-    const res = await fetch(`${API_BASE}/status`);
+    const res = await apiFetch('/status');
     const status = await res.json();
     
     if (status.maintenanceMode && !window.isAdmin) {
@@ -77,7 +93,7 @@ function formatPrice(amount, currency) {
 // --- Логика магазина (shop.html) ---
 async function loadPrices() {
   try {
-    const res = await fetch(`${API_BASE}/prices`);
+    const res = await apiFetch('/prices');
     const prices = await res.json();
     
     const keysGrid = document.getElementById('keys-grid');
@@ -134,7 +150,7 @@ window.startBotAuth = async function() {
     // Начинаем опрос сервера
     const pollInterval = setInterval(async () => {
         try {
-            const res = await fetch(`${API_BASE}/auth/verify?token=${token}`);
+            const res = await apiFetch(`/auth/verify?token=${token}`);
             if (res.ok) {
                 const data = await res.json();
                 clearInterval(pollInterval);
@@ -206,7 +222,7 @@ async function selectCurrency(currency) {
   methodSelector.innerHTML = '<div class="loader"></div>';
   
   try {
-    const res = await fetch(`${API_BASE}/payment-methods?currency=${currency}`);
+    const res = await apiFetch(`/payment-methods?currency=${currency}`);
     const methods = await res.json();
     methodSelector.innerHTML = '';
     methods.forEach(method => {
@@ -229,7 +245,7 @@ async function selectMethod(method, btn) {
   paymentDetails.innerHTML = '<div class="loader"></div>';
 
   try {
-    const res = await fetch(`${API_BASE}/payment-details/${method}`);
+    const res = await apiFetch(`/payment-details/${method}`);
     const data = await res.json();
     let inst = '';
     if (method === 'cryptobot' || method === 'crypto') {
@@ -282,7 +298,7 @@ async function createOrder() {
   payBtn.innerText = '⌛ Создание...';
 
   try {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await apiFetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -323,7 +339,7 @@ window.sendSupportMessage = async () => {
   if (!text || text.length < 5) return alert('Сообщение слишком короткое');
   
   try {
-    const res = await fetch(`${API_BASE}/site/support-message`, {
+    const res = await apiFetch('/site/support-message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegram_id: user.id, username: user.username || user.first_name, message: text })
@@ -371,7 +387,7 @@ window.closeAdminPanel = () => {
 async function loadAdminOrders() {
   const u = JSON.parse(sessionStorage.getItem('tgUser'));
   try {
-    const res = await fetch(`${API_BASE}/admin/orders?admin_id=${u.id}`);
+    const res = await apiFetch(`/admin/orders?admin_id=${u.id}`);
     const orders = await res.json();
     document.getElementById('admin-orders-body').innerHTML = orders.map(o => `
       <tr style="border-bottom:1px solid var(--glass-border); height:50px;">
@@ -385,7 +401,7 @@ window.approveOrder = async (id) => {
   const u = JSON.parse(sessionStorage.getItem('tgUser'));
   if (!confirm(`Одобрить заказ #${id}?`)) return;
   try {
-    const res = await fetch(`${API_BASE}/admin/approve-order`, {
+    const res = await apiFetch('/admin/approve-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ admin_id: u.id, order_id: id })
@@ -429,7 +445,7 @@ async function loadUserBalance() {
     return;
   }
   try {
-    const res = await fetch(`${API_BASE}/site/user-profile?telegram_id=${user.id}`);
+    const res = await apiFetch(`/site/user-profile?telegram_id=${user.id}`);
     const data = await res.json();
     
     // Обновляем шапку (если есть)

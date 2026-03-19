@@ -1,6 +1,12 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://cyrax-bot-0vwr.onrender.com/api/:path*" },
-    { "source": "/(.*)", "destination": "/site/$1" }
+    {
+      "source": "/api/(.*)",
+      "destination": "https://cyrax-bot-0vwr.onrender.com/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/site/$1"
+    }
   ]
 }
