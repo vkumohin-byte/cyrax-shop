@@ -1,5 +1,12 @@
-*
-!site/
-!site/**
-!vercel.json
-!.vercelignore
+.env
+shop.db*
+*.log
+index.js
+webapp-bot.js
+simple.js
+test.js
+node_modules/
+package.json
+package-lock.json
+README.md
+webapp/

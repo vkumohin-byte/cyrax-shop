@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "site/**",
-      "use": "@vercel/static"
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -15,5 +8,6 @@
       "source": "/(.*)",
       "destination": "/site/$1"
     }
-  ]
+  ],
+  "cleanUrls": true
 }
