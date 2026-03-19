@@ -20549,8 +20549,8 @@ app.post('/api/site/create-order', (req, res) => {
   const userId = (telegram_id === 'guest' || !telegram_id) ? 0 : (parseInt(telegram_id) || 0);
 
   db.run(
-    `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at, username) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'), ?)`,
-    [userId, product, price, currency, method, username],
+    `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+    [userId, product, price, currency, method],
     function(err) {
       if (err) {
         console.error('DB Error on create order:', err);

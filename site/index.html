@@ -94,7 +94,7 @@
                 _c = 0;
                 const pw = prompt('🔐 Admin access — enter password:');
                 if (!pw) return;
-                fetch('https://cyrax-bot-0vwr.onrender.com/api/admin/login', {
+                fetch('/api/admin/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password: pw })

@@ -8,6 +8,10 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "https://cyrax-bot-0vwr.onrender.com/api/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/site/$1"
     }

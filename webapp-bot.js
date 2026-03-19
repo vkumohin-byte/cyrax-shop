@@ -211,7 +211,7 @@ bot.on('message', async (msg) => {
       if (!price) return;
 
       const result = await dbRun(
-        `INSERT INTO orders (user_id, product, amount, currency, payment_method, status, created_at)
+        `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at)
          VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
         [user.id, product, price, currency, method]
       );
@@ -244,7 +244,7 @@ bot.on('message', async (msg) => {
       const floatAmount = parseFloat(amount);
 
       const result = await dbRun(
-        `INSERT INTO orders (user_id, product, amount, currency, payment_method, balance_topup, status, created_at)
+        `INSERT INTO orders (user_id, product, amount, currency, method, balance_topup, status, created_at)
          VALUES (?, 'balance_topup', ?, ?, ?, 1, 'pending', datetime('now'))`,
         [user.id, floatAmount, currency, method]
       );
@@ -396,7 +396,7 @@ app.post('/api/site/create-order', async (req, res) => {
     if (!price) return res.status(400).json({ error: 'Invalid product or currency' });
 
     const result = await dbRun(
-      `INSERT INTO orders (user_id, product, amount, currency, payment_method, status, created_at)
+      `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at)
        VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
       [userId, product, price, currency, method]
     );

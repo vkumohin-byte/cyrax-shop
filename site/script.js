@@ -1,7 +1,7 @@
 // --- Константы и Настройки ---
 const API_BASE = window.location.origin.includes('localhost') 
   ? 'http://localhost:5500/api' 
-  : 'https://cyrax-bot-0vwr.onrender.com/api';
+  : '/api';
 
 const METHOD_NAMES = {
   'cryptobot': 'CryptoBot ₿',
