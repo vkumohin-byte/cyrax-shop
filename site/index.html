@@ -18,22 +18,28 @@
         <section class="hero glass-card" style="max-width:500px; width:100%; border-radius:24px; padding:50px;">
             <img src="logo.png" alt="CyraxMods Logo" class="site-logo" style="width:140px; margin-bottom:30px; filter: drop-shadow(0 0 15px var(--accent-purple));">
             <h1 class="hero-title" style="font-size:3rem; margin-bottom:15px;"><span class="neon-text">CYRAX</span></h1>
-            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:40px;">Авторизуйтесь через Telegram для доступа в магазин.</p>
+            <p style="color:var(--text-secondary); font-size:1.1rem; margin-bottom:40px;">Авторизуйтесь для синхронизации профиля или продолжайте как гость.</p>
             
             <div id="login-section" style="margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:15px;">
-                <!-- Статический виджет Telegram -->
-                <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                        data-telegram-login="cyraxxmod_bot" 
-                        data-size="large" 
-                        data-radius="12" 
-                        data-onauth="onTelegramAuth(user)" 
-                        data-request-access="write"></script>
-                
-                <div style="color:var(--text-secondary); font-size:0.9rem;">или</div>
-
-                <button id="bot-auth-btn" class="btn shimmer-btn" style="background:var(--accent-teal); color:black; width:100%; max-width:240px; font-weight:600;">
-                    🤖 ВОЙТИ ЧЕРЕЗ БОТА
+                <button id="bot-auth-btn" class="btn shimmer-btn" style="background:var(--accent-teal); color:black; width:100%; max-width:260px; font-weight:700; padding: 18px;">
+                    🤖 ВОЙТИ ЧЕРЕЗ ТЕЛЕГРАМ
                 </button>
+                
+                <div style="color:var(--text-secondary); font-size:0.9rem; margin-top:5px;">или</div>
+
+                <a href="shop.html" class="btn glass-card" style="width:100%; max-width:260px; font-weight:500; border: 1px solid rgba(255,255,255,0.1); text-decoration:none; color:white; display:flex; align-items:center; justify-content:center;">
+                    👤 ПРОДОЛЖИТЬ КАК ГОСТЬ
+                </a>
+
+                <!-- Статическая кнопка-виджет (скрыта по умолчанию, если не грузится) -->
+                <div style="margin-top:20px; opacity:0.7; transform: scale(0.9);">
+                    <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                            data-telegram-login="cyraxxmod_bot" 
+                            data-size="medium" 
+                            data-radius="12" 
+                            data-onauth="onTelegramAuth(user)" 
+                            data-request-access="write"></script>
+                </div>
             </div>
 
             <div id="enter-section" class="hidden" style="margin-top:20px;">
@@ -79,28 +85,7 @@
         };
 
         // --- Обработка входа через бота (Plan B) ---
-        async function startBotAuth() {
-            const token = Math.random().toString(36).substring(2, 15);
-            const botUser = 'cyraxxmod_bot';
-            window.open(`https://t.me/${botUser}?start=auth_${token}`, '_blank');
-            
-            // Начинаем опрос сервера
-            const pollInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`https://cyrax-shop.onrender.com/api/auth/verify?token=${token}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        clearInterval(pollInterval);
-                        onTelegramAuth(data.user);
-                    }
-                } catch (e) {
-                    console.error("Auth poll error:", e);
-                }
-            }, 3000);
-
-            // Ограничение по времени - 5 минут
-            setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
-        }
+        // Перенесено в script.js
 
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(sessionStorage.getItem('tgUser'));
@@ -110,6 +95,33 @@
 
             const botBtn = document.getElementById('bot-auth-btn');
             if (botBtn) botBtn.onclick = startBotAuth;
+
+            // Скрытый вход для админа (Двойной клик по логотипу)
+            let logoClicks = 0;
+            const logoImg = document.querySelector('.site-logo');
+            if (logoImg) logoImg.onclick = () => {
+                logoClicks++;
+                if (logoClicks >= 5) {
+                    const pass = prompt("Админ-панель: Введите пароль");
+                    if (pass) {
+                        fetch('https://cyrax-shop.onrender.com/api/admin/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password: pass })
+                        })
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.success) {
+                                sessionStorage.setItem('tgUser', JSON.stringify(d.user));
+                                window.location.href = 'shop.html';
+                            } else {
+                                alert("Ошибка доступа");
+                            }
+                        });
+                    }
+                    logoClicks = 0;
+                }
+            };
         });
     </script>
     <script src="script.js"></script>

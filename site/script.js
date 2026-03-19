@@ -39,13 +39,11 @@ async function checkSystemStatus() {
 }
 
 function guardAuth() {
-  const user = JSON.parse(sessionStorage.getItem('tgUser'));
-  const isLanding = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
-  
-  if (!user && !isLanding) {
-    window.location.href = 'index.html';
-    return null;
-  }
+    const user = JSON.parse(sessionStorage.getItem('tgUser'));
+    const isLanding = window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname === '';
+    
+    // Авторизация больше не обязательна для просмотра магазина
+    // Но для админ-панели (если будем делать) можно оставить
   
   if (user) {
     window.authorizedTgId = user.id;
@@ -120,6 +118,42 @@ async function loadPrices() {
   } catch (e) {
     console.error('Загрузка цен провалена', e);
   }
+}
+
+// --- Обработка входа через бота (Plan B) ---
+window.startBotAuth = async function() {
+    const token = Math.random().toString(36).substring(2, 15);
+    const botUsername = 'cyraxxmod_bot';
+    window.open(`https://t.me/${botUsername}?start=auth_${token}`, '_blank');
+    
+    // Показываем лоадер или статус
+    const btn = document.getElementById('login-bot-btn');
+    const originalText = btn ? btn.innerText : '';
+    if (btn) btn.innerText = '⌛ Ожидание подтверждения...';
+
+    // Начинаем опрос сервера
+    const pollInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`${API_BASE}/auth/verify?token=${token}`);
+            if (res.ok) {
+                const data = await res.json();
+                clearInterval(pollInterval);
+                if (window.onTelegramAuth) window.onTelegramAuth(data.user);
+                else {
+                    sessionStorage.setItem('tgUser', JSON.stringify(data.user));
+                    window.location.reload();
+                }
+            }
+        } catch (e) {
+            console.error("Auth poll error:", e);
+        }
+    }, 3000);
+
+    // Ограничение по времени - 5 минут
+    setTimeout(() => {
+        clearInterval(pollInterval);
+        if (btn) btn.innerText = originalText;
+    }, 5 * 60 * 1000);
 }
 
 window.buyProduct = function(productKey) {
@@ -206,14 +240,30 @@ async function selectMethod(method, btn) {
   } catch (e) { paymentDetails.innerHTML = 'Ошибка'; }
 }
 
-async function createOrder() {
-  const user = JSON.parse(sessionStorage.getItem('tgUser'));
-  if (!user) return alert('Требуется авторизация!');
+async function createOrder() {    
+    // Проверка авторизации или ввод юзернейма
+    let telegramUser = JSON.parse(sessionStorage.getItem('tgUser'));
+    let username = "";
+
+    if (telegramUser) {
+        username = telegramUser.username || telegramUser.id.toString();
+    } else {
+        const guestInput = document.getElementById('guest-username');
+        username = guestInput ? guestInput.value.trim() : "";
+        
+        if (!username) {
+            alert("Пожалуйста, введите ваш Telegram никнейм для связи.");
+            if (guestInput) guestInput.focus();
+            return;
+        }
+        // Создаем временный объект для гостя
+        telegramUser = { id: 0, username: username, first_name: 'Guest' };
+    }
   
   const isTopup = checkoutState.product === 'topup_balance';
   const endpoint = isTopup ? '/site/topup-request' : '/site/create-order';
-  const body = isTopup ? { telegram_id: user.id, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method }
-                        : { telegram_id: user.id, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method };
+  const body = isTopup ? { telegram_id: telegramUser.id, amount: sessionStorage.getItem('topupAmount'), method: checkoutState.method, username: telegramUser.username }
+                        : { telegram_id: telegramUser.id, product: checkoutState.product, currency: checkoutState.currency, method: checkoutState.method, username: telegramUser.username };
 
   const payBtn = document.getElementById('pay-btn');
   payBtn.disabled = true;
@@ -333,9 +383,39 @@ window.approveOrder = async (id) => {
 };
 
 // --- Баланс Пользователя ---
+async function updateOrderUI() {
+    const user = JSON.parse(sessionStorage.getItem('tgUser'));
+    const headerProfile = document.getElementById('user-profile-header');
+    const headerName = document.getElementById('header-user-name');
+    const headerBalance = document.getElementById('header-balance');
+
+    if (user) {
+        if (headerProfile) headerProfile.classList.remove('hidden');
+        if (headerName) headerName.innerText = user.username ? `@${user.username}` : user.first_name;
+        if (headerBalance) headerBalance.innerText = `${user.balance || 0} ₽`;
+        
+        // На странице оформления скрываем выбор авторизации
+        const authOptions = document.getElementById('auth-options');
+        const authSuccess = document.getElementById('auth-success');
+        const authIdDisplay = document.getElementById('auth-id-display');
+        if (authOptions) authOptions.classList.add('hidden');
+        if (authSuccess) authSuccess.classList.remove('hidden');
+        if (authIdDisplay) authIdDisplay.innerText = user.username ? `@${user.username}` : user.first_name;
+    } else {
+        // Гостевой режим
+        if (headerProfile) {
+            headerProfile.classList.remove('hidden');
+            headerName.innerHTML = `<a href="index.html" style="color:var(--accent-teal); text-decoration:none; font-size:1rem;">📥 Войти</a>`;
+            headerBalance.innerText = "Guest";
+        }
+    }
+}
 async function loadUserBalance() {
   const user = JSON.parse(sessionStorage.getItem('tgUser'));
-  if (!user) return;
+  if (!user) {
+    updateOrderUI(); // Update UI for guest if no user
+    return;
+  }
   try {
     const res = await fetch(`${API_BASE}/site/user-profile?telegram_id=${user.id}`);
     const data = await res.json();

@@ -143,6 +143,14 @@ const authSessions = new Map(); // token -> user_data
 const AUTH_TOKEN_EXPIRY = 5 * 60 * 1000; // 5 минут
 
 // ==========================================
+// 🛡️ АВТОРИЗАЦИЯ (PLAN B & ADMIN BYPASS)
+// ==========================================
+const authSessions = new Map(); // token -> user_data
+const adminSessions = new Set(); // Храним токены админ-сессий
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'cyrax_admin_123';
+const AUTH_TOKEN_EXPIRY = 5 * 60 * 1000; // 5 минут
+
+// ==========================================
 // 🗄️ ПУТЬ К БАЗЕ ДАННЫХ
 // ==========================================
 // На бесплатном Render нет персистентного диска.
@@ -1386,6 +1394,19 @@ function initializeDatabase() {
             db.run("ALTER TABLE coupons ADD COLUMN user_id INTEGER DEFAULT NULL", (e) => {
               if (e) console.error('ALTER coupons user_id:', e.message);
               else console.log('✅ Added user_id to coupons');
+            });
+          }
+        }
+      });
+
+      // Безопасная миграция: добавляем username в orders если нет
+      db.all("PRAGMA table_info(orders)", [], (err, columns) => {
+        if (!err && columns) {
+          const hasUsername = columns.some(c => c.name === 'username');
+          if (!hasUsername) {
+            db.run("ALTER TABLE orders ADD COLUMN username TEXT", (e) => {
+              if (e) console.error('ALTER orders username:', e.message);
+              else console.log('✅ Added username to orders');
             });
           }
         }
@@ -6181,7 +6202,8 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
         id: user.id,
         first_name: user.first_name,
         username: user.username,
-        auth_date: Math.floor(Date.now() / 1000)
+        auth_date: Math.floor(Date.now() / 1000),
+        is_admin: (user.id === ADMIN_ID)
       });
       setTimeout(() => authSessions.delete(token), AUTH_TOKEN_EXPIRY);
       bot.sendMessage(chatId, "✅ <b>Авторизация подтверждена!</b>\n\nТеперь вернитесь на сайт, вход произойдет автоматически.", { parse_mode: 'HTML' }).catch(() => {});
@@ -20514,7 +20536,7 @@ app.get('/api/order-status/:orderId', (req, res) => {
 });
 
 app.post('/api/site/create-order', (req, res) => {
-  const { telegram_id, product, currency, method } = req.body;
+  const { telegram_id, product, currency, method, username } = req.body;
   
   if (SYSTEM_STATUS.maintenanceMode && parseInt(telegram_id) !== parseInt(ADMIN_ID)) {
     return res.status(503).json({ error: 'Сайт находится на техническом обслуживании' });
@@ -20524,30 +20546,61 @@ app.post('/api/site/create-order', (req, res) => {
     return res.status(403).json({ error: 'Продажа ключей временно приостановлена' });
   }
 
-  if (!telegram_id || !product || !currency || !method) return res.status(400).json({ error: 'Missing params' });
+  // Для гостя telegram_id может быть 0
+  if (!product || !currency || !method) return res.status(400).json({ error: 'Missing params' });
   const price = PRICES[product]?.[currency];
   if (!price) return res.status(400).json({ error: 'Invalid product or currency' });
 
+  const userId = parseInt(telegram_id) || 0;
+
   db.run(
-    `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`,
-    [parseInt(telegram_id), product, price, currency, method],
+    `INSERT INTO orders (user_id, product, amount, currency, method, status, created_at, username) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'), ?)`,
+    [userId, product, price, currency, method, username],
     function(err) {
-      if (err) return res.status(500).json({ error: 'DB Error' });
+      if (err) {
+        console.error('DB Error on create order:', err);
+        return res.status(500).json({ error: 'DB Error' });
+      }
       const orderId = this.lastID;
       
-      const userMsg = `✅ *Заказ #${orderId} создан!*\n\n🔑 Товар: ${product}\n💰 Сумма: ${price} ${currency}\n💳 Метод: ${method}\n\n⚠️ После оплаты отправьте скриншот чека в этот чат (если оплата ручная) или ожидайте проверки.`;
-      bot.sendMessage(telegram_id, userMsg, {
-        parse_mode: 'Markdown',
-        reply_markup: { inline_keyboard: [[{ text: '❌ Отменить заказ', callback_data: `cancel_order_${orderId}` }]] }
-      }).catch(e => console.error('Site order notify error:', e.message));
+      // Отправляем уведомление пользователю, только если он авторизован
+      if (userId !== 0) {
+        const userMsg = `✅ *Заказ #${orderId} создан!*\n\n🔑 Товар: ${product}\n💰 Сумма: ${price} ${currency}\n💳 Метод: ${method}\n\n⚠️ После оплаты отправьте скриншот чека в этот чат (если оплата ручная) или ожидайте проверки.`;
+        bot.sendMessage(userId, userMsg, {
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: [[{ text: '❌ Отменить заказ', callback_data: `cancel_order_${orderId}` }]] }
+        }).catch(e => console.error('Site order notify error:', e.message));
+      }
 
+      // Уведомление админу
       if (ADMIN_ID) {
-        bot.sendMessage(ADMIN_ID, `🛒 *Новый заказ с САЙТА!*\n\n👤 ID: ${telegram_id}\n🔑 ${product}\n💰 ${price} ${currency}\n💳 ${method}\n📦 Заказ #${orderId}`).catch(()=>{});
+        const clientInfo = userId !== 0 ? `ID: ${userId}` : `Гость: ${username || 'без ника'}`;
+        bot.sendMessage(ADMIN_ID, `🛒 *Новый заказ с САЙТА!*\n\n👤 ${clientInfo}\n🔑 ${product}\n💰 ${price} ${currency}\n💳 ${method}\n📦 Заказ #${orderId}`).catch(()=>{});
       }
 
       res.json({ success: true, orderId });
     }
   );
+});
+
+// --- Admin Login (Password based) ---
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'cyrax_admin_123';
+
+    if (password === ADMIN_PASSWORD) {
+        // Возвращаем объект админа
+        res.json({ 
+            success: true, 
+            user: { 
+                id: parseInt(process.env.ADMIN_ID) || 5187702657, 
+                username: process.env.ADMIN_USERNAME || 'admin',
+                first_name: 'Administrator'
+            }
+        });
+    } else {
+        res.status(401).json({ success: false, error: 'Invalid password' });
+    }
 });
 
 // --- Support Message (Site -> Admin Telegram) ---
@@ -20572,7 +20625,15 @@ app.get('/api/admin/orders', (req, res) => {
   const adminId = parseInt(req.query.admin_id);
   if (adminId !== ADMIN_ID) return res.status(403).json({ error: 'Unauthorized' });
 
-  db.all(`SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.status = 'pending' ORDER BY o.id DESC`, (err, rows) => {
+  // Используем COALESCE для отображения либо системного ника (из таблицы users), 
+  // либо ника введенного гостем при заказе (из таблицы orders).
+  db.all(`
+    SELECT o.*, COALESCE(u.username, o.username) as username 
+    FROM orders o 
+    LEFT JOIN users u ON o.user_id = u.id 
+    WHERE o.status = 'pending' 
+    ORDER BY o.id DESC
+  `, (err, rows) => {
     if (err) return res.status(500).json({ error: 'DB Error' });
     res.json(rows);
   });
