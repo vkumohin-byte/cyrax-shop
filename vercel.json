@@ -1,5 +1,11 @@
 {
-  "cleanUrls": true,
+  "version": 2,
+  "builds": [
+    {
+      "src": "site/**",
+      "use": "@vercel/static"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
